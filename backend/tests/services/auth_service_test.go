@@ -3,9 +3,9 @@ package services
 import (
 	"testing"
 
-	"tp06-testing/internal/models"
-	"tp06-testing/internal/services"
-	"tp06-testing/tests/mocks"
+	"forum-app-cloud-deploy/internal/models"
+	"forum-app-cloud-deploy/internal/services"
+	"forum-app-cloud-deploy/tests/mocks"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"tp06-testing/internal/models"
+	"forum-app-cloud-deploy/internal/models"
 
 	"github.com/stretchr/testify/mock"
 )

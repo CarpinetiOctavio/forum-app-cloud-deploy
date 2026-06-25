@@ -4,11 +4,11 @@ import (
 	"log"
 	"net/http"
 
-	"tp06-testing/internal/database"
-	"tp06-testing/internal/handlers"
-	"tp06-testing/internal/repository"
-	"tp06-testing/internal/router"
-	"tp06-testing/internal/services"
+	"forum-app-cloud-deploy/internal/database"
+	"forum-app-cloud-deploy/internal/handlers"
+	"forum-app-cloud-deploy/internal/repository"
+	"forum-app-cloud-deploy/internal/router"
+	"forum-app-cloud-deploy/internal/services"
 )
 
 func main() {

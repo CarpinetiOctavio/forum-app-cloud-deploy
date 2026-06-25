@@ -3,7 +3,7 @@ package repository
 import (
 	"database/sql"
 
-	"tp06-testing/internal/models"
+	"forum-app-cloud-deploy/internal/models"
 )
 
 // UserRepository defines operations on users

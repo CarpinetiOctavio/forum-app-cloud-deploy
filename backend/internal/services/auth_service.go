@@ -4,8 +4,8 @@ import (
 	"errors"
 	"strings"
 
-	"tp06-testing/internal/models"
-	"tp06-testing/internal/repository"
+	"forum-app-cloud-deploy/internal/models"
+	"forum-app-cloud-deploy/internal/repository"
 )
 
 // AuthService handles authentication logic

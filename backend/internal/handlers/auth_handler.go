@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"tp06-testing/internal/models"
-	"tp06-testing/internal/services"
+	"forum-app-cloud-deploy/internal/models"
+	"forum-app-cloud-deploy/internal/services"
 )
 
 // AuthHandler handles HTTP authentication requests

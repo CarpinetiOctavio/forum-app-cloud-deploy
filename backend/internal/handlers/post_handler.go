@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"tp06-testing/internal/models"
-	"tp06-testing/internal/services"
+	"forum-app-cloud-deploy/internal/models"
+	"forum-app-cloud-deploy/internal/services"
 
 	"github.com/gorilla/mux"
 )

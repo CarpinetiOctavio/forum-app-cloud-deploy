@@ -40,7 +40,7 @@ db, err := database.InitDB("./database.db")
 ### 2. Resultado
 
 ```
-tp06-testing/
+forum-app-cloud-deploy/
 ├── backend/
 │   ├── database.db          ← Archivo creado automáticamente
 │   ├── cmd/api/

@@ -3,7 +3,7 @@ package router
 import (
 	"net/http"
 
-	"tp06-testing/internal/handlers"
+	"forum-app-cloud-deploy/internal/handlers"
 
 	"github.com/gorilla/mux"
 )

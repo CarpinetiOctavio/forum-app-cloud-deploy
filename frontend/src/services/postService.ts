@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { Post, CreatePostRequest, Comment, CreateCommentRequest } from '../types';
 
-const API_URL = 'http://localhost:8080/api/posts';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const API_URL = `${API_BASE}/posts`;
 
 export const postService = {
   // Retrieve all posts

@@ -10,14 +10,14 @@ describe('Full User Flow', () => {
 
         cy.intercept('GET', '**/api/posts', { statusCode: 200, body: [] })
 
-        cy.contains('¿No tienes cuenta? Regístrate').click()
+        cy.contains("Don't have an account? Sign Up").click()
         cy.get('input#email').type('nuevo@example.com')
         cy.get('input#username').type('nuevo')
         cy.get('input#password').type('123456')
         cy.get('button[type="submit"]').click()
 
         cy.wait('@register')
-        cy.contains('Hola, @nuevo').should('be.visible')
+        cy.contains('Hello, @nuevo').should('be.visible')
 
         // 2. CREATE POST
         cy.intercept('POST', '**/api/posts', {
@@ -44,9 +44,9 @@ describe('Full User Flow', () => {
             }]
         })
 
-        cy.get('input[placeholder*="título"]').type('Mi primer post')
-        cy.get('textarea[placeholder*="compartir"]').type('Contenido inicial')
-        cy.contains('button', 'Publicar Post').click()
+        cy.get('input[placeholder*="title"]').type('Mi primer post')
+        cy.get('textarea[placeholder*="share"]').type('Contenido inicial')
+        cy.contains('button', 'Publish Post').click()
 
         cy.wait('@createPost')
         cy.contains('Mi primer post').should('be.visible')
@@ -82,13 +82,13 @@ describe('Full User Flow', () => {
         })
 
         cy.contains('Mi primer post').click()
-        cy.get('textarea[placeholder*="comentario"]').type('Gran post!')
-        cy.contains('button', 'Comentar').click()
+        cy.get('textarea[placeholder*="comment"]').type('Gran post!')
+        cy.contains('button', 'Comment').click()
 
         // 4. LOGOUT
-        cy.contains('← Volver').click()
-        cy.contains('Cerrar Sesión').click()
+        cy.contains('← Back').click()
+        cy.contains('Log Out').click()
 
-        cy.get('h2').should('contain', 'Iniciar Sesión')
+        cy.get('h2').should('contain', 'Sign In')
     })
 })

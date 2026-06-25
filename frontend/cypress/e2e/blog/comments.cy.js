@@ -45,8 +45,8 @@ describe('Comments Management', () => {
 
         cy.contains('Post de prueba').click()
 
-        cy.contains('← Volver').should('be.visible')
-        cy.contains('Agregar Comentario').should('be.visible')
+        cy.contains('← Back').should('be.visible')
+        cy.contains('Add Comment').should('be.visible')
     })
 
     it('should create a comment', () => {
@@ -82,8 +82,8 @@ describe('Comments Management', () => {
         cy.contains('Post de prueba').click()
         cy.wait('@getComments')
 
-        cy.get('textarea[placeholder*="comentario"]').type('Mi comentario')
-        cy.contains('button', 'Comentar').click()
+        cy.get('textarea[placeholder*="comment"]').type('Mi comentario')
+        cy.contains('button', 'Comment').click()
 
         cy.wait('@createComment')
     })
@@ -108,10 +108,10 @@ describe('Comments Management', () => {
 
         cy.contains('Post de prueba').click()
 
-        cy.contains('button', 'Comentar').should('be.disabled')
+        cy.contains('button', 'Comment').should('be.disabled')
 
-        cy.get('textarea[placeholder*="comentario"]').type('Algo')
-        cy.contains('button', 'Comentar').should('not.be.disabled')
+        cy.get('textarea[placeholder*="comment"]').type('Algo')
+        cy.contains('button', 'Comment').should('not.be.disabled')
     })
 
     it('should navigate back to post list', () => {
@@ -133,9 +133,9 @@ describe('Comments Management', () => {
         })
 
         cy.contains('Post de prueba').click()
-        cy.contains('← Volver').click()
+        cy.contains('← Back').click()
 
-        cy.contains('Crear Nuevo Post').should('be.visible')
+        cy.contains('Create New Post').should('be.visible')
         cy.contains('Posts').should('be.visible')
     })
 })

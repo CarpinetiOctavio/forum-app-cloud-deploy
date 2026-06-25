@@ -25,7 +25,7 @@ describe('Posts Management', () => {
     })
 
     it('should show message when there are no posts', () => {
-        cy.contains('No hay posts todavía').should('be.visible')
+        cy.contains('No posts yet').should('be.visible')
     })
 
     it('should create a post successfully', () => {
@@ -53,9 +53,9 @@ describe('Posts Management', () => {
             }]
         })
 
-        cy.get('input[placeholder*="título"]').type('Mi primer post')
-        cy.get('textarea[placeholder*="compartir"]').type('Contenido de prueba')
-        cy.contains('button', 'Publicar Post').click()
+        cy.get('input[placeholder*="title"]').type('Mi primer post')
+        cy.get('textarea[placeholder*="share"]').type('Contenido de prueba')
+        cy.contains('button', 'Publish Post').click()
 
         cy.wait('@createPost')
 
@@ -65,11 +65,11 @@ describe('Posts Management', () => {
     })
 
     it('should show error when creating post without title', () => {
-        cy.get('textarea[placeholder*="compartir"]').type('Solo contenido')
-        cy.contains('button', 'Publicar Post').click()
+        cy.get('textarea[placeholder*="share"]').type('Solo contenido')
+        cy.contains('button', 'Publish Post').click()
 
         // HTML5 validation prevents submit
-        cy.get('input[placeholder*="título"]').should('have.prop', 'validity')
+        cy.get('input[placeholder*="title"]').should('have.prop', 'validity')
             .and('have.property', 'valueMissing', true)
     })
 

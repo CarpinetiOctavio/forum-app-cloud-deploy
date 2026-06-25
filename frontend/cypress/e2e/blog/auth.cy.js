@@ -4,29 +4,29 @@ describe('Authentication Flow', () => {
     })
 
     it('should show the login form by default', () => {
-        cy.get('h2').should('contain', 'Iniciar Sesión')
+        cy.get('h2').should('contain', 'Sign In')
         cy.get('input#email').should('be.visible')
         cy.get('input#password').should('be.visible')
-        cy.get('button[type="submit"]').should('contain', 'Iniciar Sesión')
+        cy.get('button[type="submit"]').should('contain', 'Sign In')
     })
 
     it('should toggle between login and registration', () => {
         // Switch to register
-        cy.contains('¿No tienes cuenta? Regístrate').click()
-        cy.get('h2').should('contain', 'Registrarse')
+        cy.contains("Don't have an account? Sign Up").click()
+        cy.get('h2').should('contain', 'Sign Up')
         cy.get('input#username').should('be.visible')
-        cy.get('button[type="submit"]').should('contain', 'Registrarse')
+        cy.get('button[type="submit"]').should('contain', 'Sign Up')
 
         // Back to login
-        cy.contains('¿Ya tienes cuenta? Inicia sesión').click()
-        cy.get('h2').should('contain', 'Iniciar Sesión')
+        cy.contains('Already have an account? Sign In').click()
+        cy.get('h2').should('contain', 'Sign In')
         cy.get('input#username').should('not.exist')
     })
 
     it('should show error with invalid credentials', () => {
         cy.intercept('POST', '**/api/auth/login', {
             statusCode: 401,
-            body: { error: 'Credenciales inválidas' }
+            body: { error: 'Invalid credentials' }
         })
 
         cy.get('input#email').type('invalid@example.com')
@@ -34,7 +34,7 @@ describe('Authentication Flow', () => {
         cy.get('button[type="submit"]').click()
 
         cy.get('.error-message').should('be.visible')
-            .and('contain', 'Credenciales inválidas')
+            .and('contain', 'Invalid credentials')
     })
 
     it('should perform successful login', () => {
@@ -59,8 +59,8 @@ describe('Authentication Flow', () => {
         cy.wait('@loginRequest')
 
         // Verify the app is displayed
-        cy.contains('Mini Red Social').should('be.visible')
-        cy.contains('Hola, @testuser').should('be.visible')
+        cy.contains('Mini Social Network').should('be.visible')
+        cy.contains('Hello, @testuser').should('be.visible')
     })
 
     it('should register successfully', () => {
@@ -79,7 +79,7 @@ describe('Authentication Flow', () => {
         })
 
         // Switch to registration mode
-        cy.contains('¿No tienes cuenta? Regístrate').click()
+        cy.contains("Don't have an account? Sign Up").click()
 
         cy.get('input#email').type('newuser@example.com')
         cy.get('input#username').type('newuser')
@@ -89,6 +89,6 @@ describe('Authentication Flow', () => {
         cy.wait('@registerRequest')
 
         // Verify the app is displayed
-        cy.contains('Hola, @newuser').should('be.visible')
+        cy.contains('Hello, @newuser').should('be.visible')
     })
 })

@@ -6,6 +6,62 @@ expected output to confirm it worked.
 
 ---
 
+## Before you start — Clean up your environment
+
+Run these commands before cloning and starting the project on any machine.
+They ensure that ports are free, no stale containers are running, and Docker
+is operational.
+
+---
+
+**1. Kill any process using port 8080 (backend)**
+```bash
+lsof -ti :8080 | xargs kill -9 2>/dev/null; echo "done"
+```
+Use when starting the backend locally and port 8080 is already in use —
+typically a previous run left the process alive.
+Expected: `done` with no other output. If nothing was running on that port,
+`kill` has nothing to do and `2>/dev/null` suppresses the error silently.
+
+**2. Kill any process using port 3000 (frontend)**
+```bash
+lsof -ti :3000 | xargs kill -9 2>/dev/null; echo "done"
+```
+Use when starting the React dev server and port 3000 is already taken.
+Expected: same as above — `done` with no errors.
+
+**3. Verify both ports are free**
+```bash
+lsof -i :8080 -i :3000
+```
+Use immediately after the kill commands to confirm nothing is still listening.
+Expected: no output at all. Any line in the output means a process is still
+holding that port.
+
+**4. Stop and remove any running project containers**
+```bash
+docker ps --filter "name=forum" --format "{{.Names}}"
+```
+Use to see which project containers are currently running.
+Expected: empty output if none are running. If container names appear, stop
+and remove them:
+```bash
+docker ps --filter "name=forum" -q | xargs docker rm -f 2>/dev/null; echo "done"
+```
+Expected: `done`. Each removed container prints its ID on a separate line
+before `done`.
+
+**5. Verify Docker Desktop is running**
+```bash
+docker info --format "Server Version: {{.ServerVersion}}"
+```
+Use before any `docker build` or `docker run` command.
+Expected: `Server Version: 27.x.x` (or similar). If Docker Desktop is not
+running you will get `Cannot connect to the Docker daemon` — open Docker
+Desktop and wait for it to finish starting before retrying.
+
+---
+
 ## 1. Git
 
 **Clone the repository**

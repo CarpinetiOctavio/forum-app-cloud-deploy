@@ -15,6 +15,7 @@ FROM alpine:3.19
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
+RUN chown appuser:appgroup /app
 COPY --from=builder --chown=appuser:appgroup /app/server .
 
 USER appuser

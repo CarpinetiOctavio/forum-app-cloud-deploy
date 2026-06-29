@@ -98,16 +98,54 @@ during compilation.
 
 ---
 
+### (d) SQLite unable to create database.db — appuser has no write permission on /app
+
+**Problem:** When cloning the repository from scratch and running the backend
+container locally, the application failed at startup with:
+
+```
+failed to initialize database: unable to open database file: no such file or directory
+```
+
+This blocked both local testing and deployment on Render.
+
+**Root cause:** The `WORKDIR /app` instruction in the final stage creates the
+directory as `root:root` with mode `755`. The `COPY --chown=appuser:appgroup`
+instruction transfers ownership of the binary but not of the directory itself.
+When SQLite attempts to create `database.db` in `/app` at runtime, `appuser`
+lacks write permission on the directory.
+
+This is the materialisation of the consequence already noted in section (c):
+*"any future feature that requires writing to the filesystem must ensure the
+target path is writable by that user."*
+
+**Fix:** Added a `RUN chown appuser:appgroup /app` instruction between `WORKDIR`
+and `COPY` in the final stage. It executes as `root` (before `USER appuser` is
+set) and transfers ownership of the directory itself:
+
+```dockerfile
+WORKDIR /app
+RUN chown appuser:appgroup /app
+COPY --from=builder --chown=appuser:appgroup /app/server .
+USER appuser
+```
+
+`appuser` can now create new files under `/app`, including `database.db`.
+
+---
+
 ## Alternatives considered
 
 | Alternative | Reason not chosen |
-|---|---|
+| --- | --- |
 | Use `latest` tag in pipeline to avoid registry linking issues | Violates the non-negotiable constraint that images are tagged with commit SHA. Rejected without further consideration. |
 | Use a PAT instead of GITHUB_TOKEN for registry push in CI | Would require storing a long-lived credential as a secret. GITHUB_TOKEN is ephemeral and scoped to the workflow run — the correct approach once packages are linked. |
 | Suppress SonarCloud rule docker:S6471 | Does not fix the underlying security issue. A non-root user is straightforward to add and has no functional downside. |
+| Mount a separate writable volume for the database | Correct for production persistence but does not fix the immediate startup failure when no volume is mounted. The directory still needs to be writable. |
 
 ## Consequences
 
 - Local image builds for deployment must always specify `--platform linux/amd64`.
 - Both ghcr.io packages must remain linked to the repository for `GITHUB_TOKEN` to push successfully in future pipeline runs.
 - The backend container runs as `appuser` — any future feature that requires writing to the filesystem must ensure the target path is writable by that user.
+- `/app` is owned by `appuser:appgroup` in the final image — SQLite can create `database.db` there both in local runs and on Render.

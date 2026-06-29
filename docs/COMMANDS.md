@@ -60,6 +60,13 @@ Expected: `Server Version: 27.x.x` (or similar). If Docker Desktop is not
 running you will get `Cannot connect to the Docker daemon` — open Docker
 Desktop and wait for it to finish starting before retrying.
 
+**6. Remove all local project images (optional — use before a clean demo)**
+```bash
+docker rmi forum-backend forum-frontend 2>/dev/null; echo "done"
+```
+Use when you want to demonstrate a full build from scratch. After running this, `docker build` downloads base images and compiles everything from zero — nothing is cached.
+Expected: `done`. Each removed image prints its ID before `done`. If the images didn't exist, `2>/dev/null` suppresses the error silently.
+
 ---
 
 ## 1. Git
@@ -181,11 +188,11 @@ Test with `curl http://localhost:8080/api/posts` — should return `[]`.
 
 **Run frontend container locally**
 ```bash
-docker run --rm -p 8080:80 forum-frontend
+docker run --rm -p 3000:80 forum-frontend
 ```
 Use to verify the nginx entrypoint replaces the URL placeholder and serves
 the app.
-Expected: container starts with no errors. `http://localhost:8080` shows
+Expected: container starts with no errors. `http://localhost:3000` shows
 the forum UI. Check the replacement ran:
 ```bash
 docker run --rm -e REACT_APP_API_URL=https://example.com/api \

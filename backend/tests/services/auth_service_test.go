@@ -20,6 +20,7 @@ const (
 
 // TestRegister_Success tests successful user registration
 func TestRegister_Success(t *testing.T) {
+	t.Fatal("intentional failure to demonstrate pipeline gate")
 	// ARRANGE: set up mock and test data
 	mockRepo := new(mocks.MockUserRepository)
 	authService := services.NewAuthService(mockRepo)

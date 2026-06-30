@@ -83,6 +83,10 @@ Expected: repository cloned, `cd` puts you in the project root.
 ```bash
 git add path/to/file
 git commit -m "your message"
+
+---
+Empty commit:
+git commit --allow-empty -m "chore: trigger full pipeline run"
 ```
 Use after making a change. Prefer staging specific files over `git add .`
 to avoid accidentally committing secrets or binaries.
@@ -90,13 +94,17 @@ Expected: `[master abc1234] your message` — one new commit created.
 
 **Push to remote**
 ```bash
-git push origin master:main
+git push origin main
 ```
 Use to push local commits to the GitHub remote. This triggers the CI/CD
 pipeline on every push to `main`.
 Expected: `master -> main` confirmation line. The pipeline run appears
 immediately in the GitHub Actions tab.
 
+**Reviewer comment for PROD**
+```bash
+chore: verify full pipeline end-to-end after fresh clone
+```
 ---
 
 ## 2. Run locally
@@ -195,9 +203,11 @@ the app.
 Expected: container starts with no errors. `http://localhost:3000` shows
 the forum UI. Check the replacement ran:
 ```bash
-docker run --rm -e REACT_APP_API_URL=https://example.com/api \
-  --entrypoint sh forum-frontend \
-  -c "grep -c 'example.com' /usr/share/nginx/html/static/js/main.*.js"
+docker run --rm -e REACT_APP_API_URL=https://example.com/api -d --name test-frontend forum-frontend
+
+docker exec test-frontend grep -c "example.com" /usr/share/nginx/html/static/js/main.*.js
+
+docker stop test-frontend
 ```
 Expected output: `1` — the placeholder was replaced with the injected URL.
 
@@ -281,7 +291,7 @@ Open `dashboard.render.com`, select each service, and check the
 
 **Verify the backend is responding**
 ```bash
-curl https://<your-backend-qa-url>/api/posts
+curl http://localhost:8080/api/posts
 ```
 Expected: `[]` (empty array) — database is fresh on each deploy (SQLite
 on ephemeral filesystem, see ADR-005).
@@ -299,6 +309,34 @@ including the commit SHA tag:
 
 Cross-check the SHA against the GitHub Actions run that triggered the
 deploy.
+
+**Verify all 4 services are responding**
+
+Useful when the Render dashboard does not show all services in the main view.
+
+Backend QA:
+```bash
+curl https://forum-app-cloud-deploy-backend.onrender.com/api/posts
+```
+Expected: `[]`
+
+Backend PROD:
+```bash
+curl https://forum-backend-prod.onrender.com/api/posts
+```
+Expected: `[]`
+
+Frontend QA:
+```bash
+curl -I https://forum-app-cloud-deploy-frontend.onrender.com
+```
+Expected: `HTTP/2 200`
+
+Frontend PROD:
+```bash
+curl -I https://forum-frontend-prod.onrender.com
+```
+Expected: `HTTP/2 200`
 
 ---
 
@@ -368,23 +406,22 @@ in GitHub Actions → the last green `Deploy to PROD` run → step
 
 **Step 2 — Trigger a rollback deploy via Render API**
 
-Replace `PREVIOUS_SHA` with the actual commit SHA (full 40-character
-hash) and `srv-xxxxxxxxxxxxxxxx` with the real service ID.
+Replace `SHA_DEL_COMMIT` with the actual commit SHA (full 40-character hash).
 
 Backend PROD:
 ```bash
-curl -X POST "https://api.render.com/v1/services/srv-xxxxxxxxxxxxxxxx/deploys" \
+curl -X POST "https://api.render.com/v1/services/srv-d8vf577lk1mc738suglg/deploys" \
   -H "Authorization: Bearer $RENDER_API_KEY" \
   -H "Content-Type: application/json" \
-  -d "{\"imageUrl\":\"ghcr.io/carpinetioctavio/forum-app-cloud-deploy-backend:PREVIOUS_SHA\"}"
+  -d "{\"imageUrl\":\"ghcr.io/carpinetioctavio/forum-app-cloud-deploy-backend:SHA_DEL_COMMIT\"}"
 ```
 
 Frontend PROD:
 ```bash
-curl -X POST "https://api.render.com/v1/services/srv-xxxxxxxxxxxxxxxx/deploys" \
+curl -X POST "https://api.render.com/v1/services/srv-d8vf69uq1p3s73b3rkvg/deploys" \
   -H "Authorization: Bearer $RENDER_API_KEY" \
   -H "Content-Type: application/json" \
-  -d "{\"imageUrl\":\"ghcr.io/carpinetioctavio/forum-app-cloud-deploy-frontend:PREVIOUS_SHA\"}"
+  -d "{\"imageUrl\":\"ghcr.io/carpinetioctavio/forum-app-cloud-deploy-frontend:SHA_DEL_COMMIT\"}"
 ```
 
 Expected: HTTP `201 Created` response from the Render API. The service

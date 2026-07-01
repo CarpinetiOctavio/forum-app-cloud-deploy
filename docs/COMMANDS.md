@@ -460,7 +460,10 @@ never overwritten in ghcr.io.
 **Step 1 — Find the last known good SHA**
 ```bash
 git log --oneline -10
+-
+git log -1 --format="%H" <SHORT_SHA>
 ```
+
 Identify the commit SHA of the last good release. Alternatively, find it
 in GitHub Actions → the last green `Deploy to PROD` run → step
 `Deploy backend to PROD` log shows the full SHA in the image URL.

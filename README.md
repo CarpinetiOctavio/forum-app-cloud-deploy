@@ -37,6 +37,17 @@ This repository represents the full deployment lifecycle of the application: fro
 
 ---
 
+## Live Environments
+
+| Environment | Frontend | Backend API |
+|-------------|----------|-------------|
+| QA | https://forum-app-cloud-deploy-frontend.onrender.com | https://forum-app-cloud-deploy-backend.onrender.com |
+| PROD | https://forum-frontend-prod.onrender.com | https://forum-backend-prod.onrender.com |
+
+> **Note:** Services run on Render's free tier. If inactive for 15+ minutes, the first request may take up to 60 seconds while the container restarts.
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |

@@ -18,6 +18,7 @@ describe('Full User Flow', () => {
 
         cy.wait('@register')
         cy.contains('Hello, @nuevo').should('be.visible')
+        //cy.contains('Hello, @usuario_que_no_existe').should('be.visible') // Line in order to break the pipeline
 
         // 2. CREATE POST
         cy.intercept('POST', '**/api/posts', {

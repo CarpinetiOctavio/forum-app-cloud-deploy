@@ -15,7 +15,8 @@ describe('CreatePost Component', () => {
     test('renderiza el formulario correctamente', () => {
         render(<CreatePost userId={1} onPostCreated={mockOnPostCreated} />);
 
-        expect(screen.getByText('Create New Post')).toBeInTheDocument();
+        //expect(screen.getByText('Create New Post')).toBeInTheDocument();
+        expect(screen.getByText('Create New Post')).not.toBeInTheDocument(); // Line in order to show how to break the pipeline
         expect(screen.getByPlaceholderText(/write a title/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/what do you want to share/i)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /publish post/i })).toBeInTheDocument();

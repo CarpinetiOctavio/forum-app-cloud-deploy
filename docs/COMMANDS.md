@@ -204,9 +204,7 @@ Expected: container starts with no errors. `http://localhost:3000` shows
 the forum UI. Check the replacement ran:
 ```bash
 docker run --rm -e REACT_APP_API_URL=https://example.com/api -d --name test-frontend forum-frontend
-
-docker exec test-frontend grep -c "example.com" /usr/share/nginx/html/static/js/main.*.js
-
+docker exec test-frontend sh -c "grep -c 'example.com' /usr/share/nginx/html/static/js/main.*.js"
 docker stop test-frontend
 ```
 Expected output: `1` — the placeholder was replaced with the injected URL.

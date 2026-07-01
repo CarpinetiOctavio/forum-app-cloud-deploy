@@ -341,21 +341,19 @@ Expected: `HTTP/2 200`
 ## 9. Intentionally fail the pipeline
 
 This demonstrates that the quality gates block the pipeline before any
-Docker image is built or deployed.
+Docker image is built or deployed. Three failure scenarios are available,
+each aborting the pipeline at a different stage.
 
-**Step 1 — Break a backend test**
+---
 
-Edit `backend/tests/services/auth_service_test.go`. Find
-`TestRegister_Success` and add a forced failure at the top of the
-function:
+### Scenario A — Break a backend unit test (aborts at stage 1)
 
-```go
-func TestRegister_Success(t *testing.T) {
-    t.Fatal("intentional failure to demonstrate pipeline gate")
-    // ... rest of test unchanged
-```
+**Step 1 — Uncomment the intentional failure line**
 
-**Step 2 — Verify the failure locally before pushing**
+In `backend/tests/services/auth_service_test.go`, find `TestRegister_Success`
+and uncomment the line marked `// line in order to show how to break the pipeline`.
+
+**Step 2 — Verify locally before pushing**
 ```bash
 cd backend
 go test ./tests/services/... -v 2>&1 | head -20
@@ -365,26 +363,91 @@ Expected: `FAIL` on `TestRegister_Success`, `FAIL` on the package.
 **Step 3 — Push**
 ```bash
 git add backend/tests/services/auth_service_test.go
-git commit -m "test: intentional failure to demonstrate pipeline gate"
-git push origin master:main
+git commit -m "test: intentional backend failure to demonstrate pipeline gate"
+git push origin main
 ```
 
-**Step 4 — Observe the pipeline abort**
+**Step 4 — Observe**
 
-In GitHub Actions, `Backend Tests (Go)` fails. All downstream jobs
-(`SonarCloud`, `Cypress E2E`, `Docker Build & Push`, `Deploy to QA`,
-`Deploy to PROD`) are skipped — they never run.
+`Backend Tests (Go)` fails. All downstream jobs (`SonarCloud`, `Cypress E2E`,
+`Docker Build & Push`, `Deploy to QA`, `Deploy to PROD`) are skipped — they
+never run. No image is built or pushed to ghcr.io.
 
-To confirm no image was built: check
-`github.com/carpinetioctavio?tab=packages` — no new package version
-with this commit's SHA exists.
+**Step 5 — Restore**
 
-**Step 5 — Revert**
+Comment the line back and push:
 ```bash
-git revert HEAD --no-edit
-git push origin master:main
+git add backend/tests/services/auth_service_test.go
+git commit -m "chore: clean up intentional test failure after pipeline gate demonstration"
+git push origin main
 ```
-Expected: pipeline runs green again on the revert commit.
+
+---
+
+### Scenario B — Break a frontend unit test (aborts at stage 2)
+
+**Step 1 — Uncomment the intentional failure line**
+
+In `frontend/src/components/CreatePost/CreatePost.test.tsx`, find the line
+marked `// line in order to show how to break the pipeline` and uncomment it.
+
+**Step 2 — Verify locally before pushing**
+```bash
+cd frontend
+npm test -- --watchAll=false 2>&1 | tail -20
+```
+Expected: `FAIL` on `CreatePost.test.tsx`, test suite fails.
+
+**Step 3 — Push**
+```bash
+git add frontend/src/components/CreatePost/CreatePost.test.tsx
+git commit -m "test: intentional frontend failure to demonstrate pipeline gate"
+git push origin main
+```
+
+**Step 4 — Observe**
+
+Backend tests pass but `Frontend Tests (React)` fails. `SonarCloud`,
+`Cypress E2E`, `Docker Build & Push`, and deploy jobs are skipped.
+
+**Step 5 — Restore**
+
+Comment the line back and push with message:
+`chore: clean up intentional test failure after pipeline gate demonstration`
+
+---
+
+### Scenario C — Break an E2E test (aborts at stage 4)
+
+**Step 1 — Uncomment the intentional failure line**
+
+In `frontend/cypress/e2e/blog/full-flow.cy.js`, find the line marked
+`// line in order to show how to break the pipeline` and uncomment it.
+
+**Step 2 — Verify locally before pushing**
+```bash
+cd frontend
+npx cypress run --spec "cypress/e2e/blog/full-flow.cy.js"
+```
+Expected: `1 failing` on the full flow test.
+
+**Step 3 — Push**
+```bash
+git add frontend/cypress/e2e/blog/full-flow.cy.js
+git commit -m "test: intentional E2E failure to demonstrate pipeline gate"
+git push origin main
+```
+
+**Step 4 — Observe**
+
+Backend and frontend unit tests pass, SonarCloud passes, but `Cypress E2E`
+fails. `Docker Build & Push`, `Deploy to QA`, and `Deploy to PROD` are
+skipped — no image is built despite all unit tests passing.
+
+**Step 5 — Restore**
+
+Comment the line back and push with message:
+`chore: clean up intentional test failure after pipeline gate demonstration`
 
 ---
 

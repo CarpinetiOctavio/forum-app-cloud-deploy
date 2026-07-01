@@ -475,7 +475,7 @@ in GitHub Actions → the last green `Deploy to PROD` run → step
 Before running the curl commands, make sure the API key is exported in your terminal:
 
 ```bash
-export RENDER_API_KEY="rnd_6hYA9rDRaAKjomhBdwwDRYsxWjKM"
+export RENDER_API_KEY="your-render-api-key"
 
 ---
 

@@ -48,7 +48,7 @@ function App() {
   return (
     <div className="App">
       <header className="app-header">
-        <h1>2</h1>
+        <h1>Mini Social Network</h1>
         <div className="user-info">
           <span>Hello, @{currentUser.username}</span>
           <button onClick={handleLogout} className="logout-btn">

@@ -460,7 +460,9 @@ never overwritten in ghcr.io.
 **Step 1 — Find the last known good SHA**
 ```bash
 git log --oneline -10
--
+
+---
+
 git log -1 --format="%H" <SHORT_SHA>
 ```
 
@@ -469,6 +471,16 @@ in GitHub Actions → the last green `Deploy to PROD` run → step
 `Deploy backend to PROD` log shows the full SHA in the image URL.
 
 **Step 2 — Trigger a rollback deploy via Render API**
+
+Before running the curl commands, make sure the API key is exported in your terminal:
+
+```bash
+export RENDER_API_KEY="rnd_6hYA9rDRaAKjomhBdwwDRYsxWjKM"
+
+---
+
+echo $RENDER_API_KEY
+```
 
 Replace `SHA_DEL_COMMIT` with the actual commit SHA (full 40-character hash).
 
@@ -493,8 +505,19 @@ Events tab shows a new deploy starting with the previous SHA image.
 
 **Step 3 — Verify rollback**
 
-Once the deploy completes, repeat the verification steps from section 8.
-The Events tab should show the previous SHA in the image URL.
+Once the deploy completes, verify both PROD services are responding:
+
+```bash
+curl https://forum-backend-prod.onrender.com/api/posts
+```
+Expected: `[]`
+
+```bash
+curl -I https://forum-frontend-prod.onrender.com
+```
+Expected: `HTTP/2 200`
+
+The Events tab in Render should show the previous SHA in the image URL.
 
 **Why rollback is always possible:** images are tagged with commit SHA
 and never deleted or overwritten in ghcr.io (see ADR-003). Any

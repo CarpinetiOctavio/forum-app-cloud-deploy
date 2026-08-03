@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 320" font-family="Helvetica, Arial, sans-serif">
+    <rect width="680" height="320" fill="#ffffff"/>
+
+    <text x="255" y="59" text-anchor="middle" font-size="11" fill="#4b5563">Delete</text>
+    <text x="505" y="59" text-anchor="middle" font-size="11" fill="#4b5563">Edit</text>
+
+    <text x="40" y="106" font-size="14" font-weight="600" fill="#111827">Post</text>
+    <text x="40" y="196" font-size="14" font-weight="600" fill="#111827">Comment</text>
+
+    <rect x="140" y="70" width="230" height="64" rx="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+    <text x="255" y="94" text-anchor="middle" font-size="14" font-weight="600" fill="#064e3b">DeletePost</text>
+    <text x="255" y="114" text-anchor="middle" font-size="11" fill="#065f46">checked in Go (service)</text>
+
+    <rect x="390" y="70" width="230" height="64" rx="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+    <text x="505" y="94" text-anchor="middle" font-size="14" font-weight="600" fill="#064e3b">EditPost</text>
+    <text x="505" y="114" text-anchor="middle" font-size="11" fill="#065f46">checked in Go (service)</text>
+
+    <rect x="140" y="160" width="230" height="64" rx="8" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+    <text x="255" y="184" text-anchor="middle" font-size="14" font-weight="600" fill="#7f1d1d">DeleteComment</text>
+    <text x="255" y="204" text-anchor="middle" font-size="11" fill="#b91c1c">checked in SQL's WHERE</text>
+
+    <rect x="390" y="160" width="230" height="64" rx="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+    <text x="505" y="184" text-anchor="middle" font-size="14" font-weight="600" fill="#064e3b">EditComment</text>
+    <text x="505" y="204" text-anchor="middle" font-size="11" fill="#065f46">checked in Go (service)</text>
+
+    <rect x="230" y="256" width="14" height="14" rx="3" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+    <text x="252" y="267" font-size="11" fill="#374151">authorization in Go</text>
+    <rect x="400" y="256" width="14" height="14" rx="3" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+    <text x="422" y="267" font-size="11" fill="#374151">authorization in SQL</text>
+</svg>

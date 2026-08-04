@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"forum-app-qa-pipeline/internal/models"
+	"forum-app-cloud-deploy/internal/models"
 )
 
 // PostRepository defines the operations on posts

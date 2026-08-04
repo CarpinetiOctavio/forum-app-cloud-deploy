@@ -4,11 +4,11 @@ import (
 	"log"
 	"net/http"
 
-	"forum-app-qa-pipeline/internal/database"
-	"forum-app-qa-pipeline/internal/handlers"
-	"forum-app-qa-pipeline/internal/repository"
-	"forum-app-qa-pipeline/internal/router"
-	"forum-app-qa-pipeline/internal/services"
+	"forum-app-cloud-deploy/internal/database"
+	"forum-app-cloud-deploy/internal/handlers"
+	"forum-app-cloud-deploy/internal/repository"
+	"forum-app-cloud-deploy/internal/router"
+	"forum-app-cloud-deploy/internal/services"
 )
 
 func main() {

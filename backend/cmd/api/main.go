@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"forum-app-cloud-deploy/internal/database"
 	"forum-app-cloud-deploy/internal/handlers"
@@ -13,7 +14,11 @@ import (
 
 func main() {
 	// Initialize database
-	db, err := database.InitDB("./database.db")
+	dbPath := os.Getenv("DATABASE_PATH")
+	if dbPath == "" {
+		dbPath = "./database.db"
+	}
+	db, err := database.InitDB(dbPath)
 	if err != nil {
 		log.Fatal("Failed to initialize database:", err)
 	}

@@ -241,9 +241,14 @@ files that imported the old `forum-app-qa-pipeline` path updated to match
 `internal/services/{auth,post}_service.go`, `internal/router/router.go`).
 `grep -rn "forum-app-qa-pipeline" backend --include="*.go"` → empty.
 `go build ./...`, `go vet ./...` both exit 0. `go test
-./tests/services/... -cover -coverpkg=./internal/services/...` → 47/47
+./tests/services/... -cover -coverpkg=./internal/services/...` → 50/50
 pass (including `EditPost`/`EditComment` tests, confirming this template
 carries `qa-pipeline@v1.0.0`'s full feature set), 88.2% coverage.
+**Correction (re-verified 2026-08-04):** this line originally recorded
+"47/47" — re-run with a clean test cache and a manual `--- PASS` count,
+the real figure at this checkpoint (test files unchanged since) is 50/50.
+47 was already wrong when this checklist was written, not a later
+regression. Corrected per `docs/rules/verification.md`.
 
 **4. Secrets** — Partial: SonarCloud sub-piece Done, Render sub-piece
 deliberately deferred (Octavio's sequencing decision, see below).
@@ -386,7 +391,9 @@ before deciding, not assumed from the filename:
 
 `git build`/`go vet`/`go test` re-run after all deletions to confirm
 nothing in `backend/` was affected (deletions were entirely under `docs/`):
-47/47 pass, 88.2% coverage, unchanged from item 3.
+50/50 pass, 88.2% coverage, unchanged from item 3. (Originally recorded as
+"47/47" here too — same correction as item 3 above, same re-verified real
+figure: 50/50.)
 
 ### New content specific to this repo
 

@@ -14,6 +14,19 @@ module rename — only import paths did — so 47 was already wrong when
 first written here, not a regression from anything done since. Corrected
 per `docs/rules/verification.md`.
 
+**Second correction, same date, frontend side:** this file's step 2
+originally deferred stating a frontend test count at all, having already
+found the backend "47/47" claim wrong and not wanting to guess the
+frontend's. Now verified directly, paired before/after the `ADR-006`
+source fix (`git stash` / `git stash pop` around `npm test -- --coverage
+--watchAll=false`): **51/51 passing, both before and after the fix**,
+`src/services/{auth,post}Service.ts` at 100% statement/branch/func/line
+coverage in both runs. No prior document in this repo stated "47" for the
+frontend specifically, so there is no separate false claim to correct
+here beyond this file's own now-resolved deferral — recorded for the same
+reason as the backend correction: state the real, checked number, not a
+guess.
+
 ## Why `README.md`, `docs/COMMANDS.md`, `docs/SETUP.md` are empty right now
 
 Emptied deliberately, not lost or broken. All three still had
@@ -59,10 +72,9 @@ constraint gets questioned.
 and `authService.ts`: replace the hardcoded `const API_URL =
 'http://localhost:8080/...'` with a `process.env.REACT_APP_API_URL ||
 'http://localhost:8080'` base. Verify: `npm test -- --coverage
---watchAll=false` — must still be passing at whatever the real, currently
-verified frontend count is (not assumed from this file's own prior,
-uncorrected "47/47" claim on the backend side — see the note at the top of
-this file).
+--watchAll=false` — must still be **51/51 passing** (the real, verified
+count — see the correction note at the top of this file), unchanged
+coverage on `src/services/`.
 
 **3. Backend Dockerfile.** Per `docs/rules/docker.md` in full — multi-stage
 (`golang:X-alpine` builder, `alpine` final, not `scratch`, per Rule 2's

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"strings"
 
-	"forum-app-qa-pipeline/internal/models"
-	"forum-app-qa-pipeline/internal/repository"
+	"forum-app-cloud-deploy/internal/models"
+	"forum-app-cloud-deploy/internal/repository"
 
 	"golang.org/x/crypto/bcrypt"
 )

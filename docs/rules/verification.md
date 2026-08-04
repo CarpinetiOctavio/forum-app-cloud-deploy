@@ -1,4 +1,4 @@
-# Operating rules — verification (forum-app-qa-pipeline)
+# Operating rules — verification (forum-app-cloud-deploy)
 
 ## "Done" requires evidence, not a summary
 During this repo's own setup, more than one status report described something as
@@ -23,7 +23,9 @@ commit) and confirm it directly when the tooling allows it.
 Any test count, coverage percentage, or line count stated in an ADR, README, or
 audit must be checked against the actual file or command output before being
 trusted — not assumed correct because it appears in a document that looks
-authoritative. This repo's own predecessor (`forum-app-qa-pipeline-legacy`) had
-multiple instances of stale numbers surviving undetected across several
-documents; the standard here is to verify each one, not to inherit the habit of
-not checking.
+authoritative. This repo's own predecessor (`forum-app-cloud-deploy-legacy`)
+had multiple instances of stale or false claims surviving undetected across
+several documents at once — the same wrong deploy-hook mechanism repeated,
+unverified, in four separate files, and the same false "backend logic
+inherited from qa-pipeline" claim repeated in two — the standard here is to
+verify each one, not to inherit the habit of not checking.

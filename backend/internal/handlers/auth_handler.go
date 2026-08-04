@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 
-	"forum-app-qa-pipeline/internal/models"
-	"forum-app-qa-pipeline/internal/services"
+	"forum-app-cloud-deploy/internal/models"
+	"forum-app-cloud-deploy/internal/services"
 )
 
 // maxRequestBodyBytes caps the size of any JSON request body this handler decodes.

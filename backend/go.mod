@@ -1,4 +1,4 @@
-module forum-app-qa-pipeline
+module forum-app-cloud-deploy
 
 go 1.24.1
 

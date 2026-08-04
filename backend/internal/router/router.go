@@ -3,7 +3,7 @@ package router
 import (
 	"net/http"
 
-	"forum-app-qa-pipeline/internal/handlers"
+	"forum-app-cloud-deploy/internal/handlers"
 
 	"github.com/gorilla/mux"
 )

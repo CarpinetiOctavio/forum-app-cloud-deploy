@@ -145,8 +145,13 @@ archived), not overwritten and lost the way an in-place replacement would.
   (the template-inherited name) to `forum-app-cloud-deploy` as part of this
   repo's starter-verification process, with all 12 dependent import
   statements updated in the same pass — confirmed by a real `go build`,
-  `go vet`, and full test run (47/47 passing) after the rename, not assumed
-  from the `go.mod` edit alone.
+  `go vet`, and full test run (50/50 passing) after the rename, not assumed
+  from the `go.mod` edit alone. (The "47/47" figure recorded at the time —
+  in this ADR, in `docs/NEXT-STEPS-temp.md`, and in
+  `docs/audits/cloud-deploy-starter-verification-checklist.md` — was already
+  wrong when written: the test files did not change between the initial
+  commit and the rename, only their import paths did. Corrected here once
+  re-verified directly, per `docs/rules/verification.md`.)
 - `qa-pipeline@v1.0.0`'s own `ADR-000` through `ADR-005` are **not** copied
   as files into this repository's `docs/decisions/` — per the cross-repo
   referencing convention (`docs/rules/documentation.md`), a decision here

@@ -4,9 +4,9 @@ import (
 	"errors"
 	"testing"
 
-	"forum-app-qa-pipeline/internal/models"
-	"forum-app-qa-pipeline/internal/services"
-	"forum-app-qa-pipeline/tests/mocks"
+	"forum-app-cloud-deploy/internal/models"
+	"forum-app-cloud-deploy/internal/services"
+	"forum-app-cloud-deploy/tests/mocks"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

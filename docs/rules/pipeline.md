@@ -91,6 +91,20 @@ it implies: the first image push to a not-yet-existing package must happen
 manually, before the package can be linked to this repository, before the
 pipeline can push to it with `GITHUB_TOKEN`).
 
+**Open tension, recorded rather than silently resolved**: GitHub Actions'
+documented permission model suggests a job-level `permissions` block
+should fully determine that job's token scope on its own, without needing
+a matching workflow-level grant — which would make the "both levels
+required" finding above look more like an artifact of `-legacy`'s
+un-isolated testing (workflow-level and the missing package-repository
+link, this same section's other fix, were changed together, not tested
+independently) than a real GitHub mechanism. This hasn't been verified
+empirically in this repository — the workflow-level `packages: write`
+block is kept, per the finding above, while every job that doesn't push
+to ghcr.io is given its own `permissions: {contents: read}` override so
+none of them actually inherits the broader grant. Both requirements are
+satisfied without a live test settling which one was ever really load-bearing.
+
 ## Stages 7 and 9 — branch mapping and mechanism, both decided
 
 **Branch mapping — this repo's own, not inherited from anywhere**:

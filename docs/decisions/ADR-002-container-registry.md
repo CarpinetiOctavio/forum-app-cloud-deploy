@@ -80,3 +80,42 @@ zero-budget constraint without a storage-tier decision to revisit later.
   packages must be linked to this repository afterward for `GITHUB_TOKEN`
   to have write access on subsequent runs — this is an implementation
   detail of *using* this decision, not a condition of making it.
+
+## Amendment (2026-08-05): bootstrap packages recreated from scratch, not reused
+
+**Context.** Performing the manual bootstrap push (`cloud-deploy-legacy-transferable-knowledge-results.md`
+§2) found that `ghcr.io/carpinetioctavio/forum-app-cloud-deploy-{backend,frontend}`
+already existed — public, with a full version history of commit-SHA tags
+dating back to 2026-07-01, and linked to `forum-app-cloud-deploy-legacy`
+(the archived predecessor, per `ADR-000`). No version in that history had
+ever been tagged `latest`; the bootstrap push's own one-time `latest` tag
+(sanctioned by §1/§2 for this specific purpose) was the first.
+
+**Alternatives considered:**
+
+| Alternative | Reason not chosen |
+|---|---|
+| Reuse the existing package: re-link it to this repository ("Connect repository," pointed at `forum-app-cloud-deploy` instead of `-legacy`), keep the prior history, note the mixed provenance | Rejected: mixing tags pushed by two different repositories' pipelines under one package name weakens the "one tag, one commit, one repo" traceability `ADR-003`'s SHA-tagging scheme exists to guarantee. Not a technical defect — both prior and new tags would still resolve correctly — but a provenance-cleanliness problem for a portfolio artifact meant to demonstrate this repository's own pipeline, not a merged trail of two. |
+| Delete both packages and redo the bootstrap from scratch | **Chosen.** Produces a package whose entire version history belongs to this repository's own pipeline, with no reconciliation note needed to explain an inherited tag range. |
+
+**Decision:** option 2. Octavio deletes both packages manually via GitHub's
+UI — the same standard already applied to SonarCloud project configuration
+and branch rulesets in this repository: a destructive, irreversible
+account-level action is never performed by this assistant, only proposed
+and waited on.
+
+**Consequences.**
+- `-legacy`'s ghcr.io version history (2026-07-01 through 2026-08-04) is
+  lost from ghcr.io itself once deleted. This is not a real loss of
+  information: `-legacy`'s own git history, which is what that history
+  traces back to, remains fully intact and accessible in the archived
+  `forum-app-cloud-deploy-legacy` repository — ghcr.io was never the
+  system of record for it.
+- The bootstrap push (`docker buildx build --platform linux/amd64 ...
+  --push`, tagged `latest` per §1/§2's sanctioned one-time exception) is
+  redone against the empty package names, once Octavio confirms both
+  deletions are complete.
+- `ADR-002`'s original decision (ghcr.io as the registry) and its original
+  Consequences are unaffected — this amendment only corrects how the two
+  specific packages this repository uses got created, not the choice of
+  registry itself.

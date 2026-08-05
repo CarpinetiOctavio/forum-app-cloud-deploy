@@ -40,8 +40,12 @@ func main() {
 	r := router.Setup(authHandler, postHandler)
 
 	// Start server
-	log.Println("🚀 Server running at http://localhost:8080")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("🚀 Server running at http://localhost:%s", port)
+	if err := http.ListenAndServe(":"+port, r); err != nil {
 		log.Fatal("Failed to start server:", err)
 	}
 }

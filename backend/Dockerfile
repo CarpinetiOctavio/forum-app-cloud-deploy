@@ -6,7 +6,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=1 GOOS=linux go build -o server ./cmd/api
 
-FROM alpine:3.23.5
+FROM alpine:3.24.1
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 RUN chown appuser:appgroup /app

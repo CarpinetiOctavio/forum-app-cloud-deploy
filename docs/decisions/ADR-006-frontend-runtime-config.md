@@ -147,3 +147,47 @@ the Docker layer, not the application layer.
   from — both required a real, scoped, in-bounds source fix as a
   precondition, not just a deployment-layer decision layered on top of
   already-adequate code.
+
+## Amendment (2026-08-04): substitution target moved from `/usr/share/nginx/html` to `/tmp/html`
+
+SonarCloud's `docker:S6504` ("make sure the copied resource cannot be
+modified by a non-root user") flagged the frontend Dockerfile once the
+final stage gained a non-root `USER nginx` (added to satisfy a separate
+finding, `docker:S6471`, root-by-default). The original entrypoint ran
+`sed -i` directly against `/usr/share/nginx/html` — the same directory
+`COPY --from=builder --chown=nginx:nginx` had just handed ownership of to
+the `nginx` user, specifically so the entrypoint (running as that same
+user) could write to it. Once `USER nginx` existed as a static Dockerfile
+instruction, that `--chown` was exactly the pattern S6504 exists to catch:
+the runtime user owning the content it serves, which a compromised nginx
+worker could exploit to persist a modified response.
+
+**Alternative considered and rejected: keep `--chown=nginx:nginx`, but
+scope it to only `build/static/js` instead of the whole build output.**
+This narrows *how much* the runtime user can modify, but not *whether* it
+can — the COPY line touching the JS files (the ones actually containing
+the placeholder) would still hand write ownership to the same user
+serving them, which is the exact shape `docker:S6504` checks for. It would
+likely still fail the same SonarCloud gate, just on a smaller COPY
+instruction, without resolving the underlying finding.
+
+**Decision: `/usr/share/nginx/html` stays root-owned and read-only to
+`nginx`** (no `--chown` at all on that `COPY`). The entrypoint instead
+copies the full build output to `/tmp` (`cp -r`, world-writable via the
+sticky bit, no `chown` required) and performs the placeholder
+substitution there; nginx's `root` directive is repointed to `/tmp/html`
+at build time. No `COPY` instruction in the final image ever grants the
+runtime user write access to anything — the writable copy is created
+imperatively at container start, outside what a static Dockerfile
+analyzer evaluates. Verified directly: `touch` against
+`/usr/share/nginx/html` as the `nginx` user returns `Permission denied`;
+the served bundle, fetched over a real HTTP request against the running
+container, still shows the placeholder correctly substituted.
+
+The cost is duplicating the build output on disk inside the running
+container once, at startup — this app's gzipped bundle is under 100 KB,
+and the `cp -r` adds negligible time next to the `sed` pass this ADR
+already accounted for. Everything else this ADR decided — the placeholder
+mechanism itself, the `ARG`/entrypoint split, `REACT_APP_API_URL`'s
+fallback behavior — is unchanged; only the filesystem location the
+substitution runs against moved.

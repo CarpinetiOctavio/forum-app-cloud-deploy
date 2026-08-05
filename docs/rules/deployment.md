@@ -50,6 +50,19 @@ for CRA's build-time inlining problem), and report the real list — per
 service, QA and PROD values distinguished — before configuring anything on
 Render or writing anything further in this file.
 
+**Real list, produced by that analysis, not guessed in advance**:
+
+| Variable | Service(s) | QA value | PROD value | Notes |
+|---|---|---|---|---|
+| `DATABASE_PATH` | `forum-backend-qa`, `forum-backend-prod` | Optional — falls back to `./database.db` if unset (`ADR-005`) | Same fallback | Storage is ephemeral either way (`ADR-005`); this only matters if a Render Disk is ever mounted later, per that ADR's escape hatch. |
+| `PORT` | All four services | Injected automatically by Render for every web service — not something this repo sets manually | Same | Read explicitly by both the backend (`os.Getenv("PORT")`, fallback `8080`) and the frontend's entrypoint (same fallback), per `ADR-008` — not left to Render's best-effort auto-detection. |
+| `REACT_APP_API_URL` | `forum-frontend-qa`, `forum-frontend-prod` | `forum-backend-qa`'s real public URL, once that service exists | `forum-backend-prod`'s real public URL, once that service exists | `ADR-006`. Absent, falls back to `localhost:8080` — a loud, immediately visible failure in a deployed environment, not a silent one. |
+
+No credential appears in this list — neither container reads one from the
+environment today. If that changes (`ADR-001`'s real-authentication
+follow-up work is the known future candidate), this table gets updated
+then, not in advance.
+
 ## Persistence — this repo's own decision, not `-legacy`'s
 This repo's application code is `qa-pipeline@v1.0.0`'s, not
 `cloud-deploy-legacy`'s — its real database/persistence behavior **MUST**

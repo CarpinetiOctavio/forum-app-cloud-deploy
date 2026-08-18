@@ -31,6 +31,10 @@ opposite direction from a bare `[main]` — too broad, not too narrow — and
 both are wrong for the same underlying reason: neither was checked against
 what the trigger is actually supposed to gate before being written.
 
+**Nota post-verificación (`ADR-009`)**: este trigger de `push` en las tres
+ramas es correcto y deliberado para Stages 1–6. No confundir con el
+branch-mapping de Stages 7/9, que sí estaba mal — ver `ADR-009`.
+
 ## Stage order — sequential and blocking
 Every stage MUST complete successfully before the next starts. A failure
 at any stage MUST abort the entire pipeline — no later stage runs. No
@@ -42,7 +46,7 @@ why.
 | 1–4 | Backend tests, frontend tests, SonarCloud analysis, Cypress E2E | Inherited — see below | `feature/**`, `staging`, `main` |
 | 5 | Docker image build | New to this repo | `feature/**`, `staging`, `main` |
 | 6 | Push to ghcr.io | New to this repo | `feature/**`, `staging`, `main` |
-| 7 | Deploy to QA (Render) + smoke test | New — mechanism decided, `ADR-007` | `staging` only |
+| 7 | Deploy to QA (Render) + smoke test | New — mechanism decided, `ADR-007`; trigger corrected, `ADR-009` | `main` only |
 | 8 | Manual approval gate | New | `main` only |
 | 9 | Deploy to PROD (Render) + smoke test | New — same mechanism as Stage 7 | `main` only |
 
@@ -132,15 +136,21 @@ repo's clean-bootstrap decision (`ADR-002`'s amendment) forced it to be.
 
 ## Stages 7 and 9 — branch mapping and mechanism, both decided
 
-**Branch mapping — this repo's own, not inherited from anywhere**:
-- **Stage 7 MUST** run `if: github.ref == 'refs/heads/staging'` — a merge
-  into `staging` is what promotes code to the QA environment.
-- **Stage 9 MUST** run `if: github.ref == 'refs/heads/main'` — a merge into
-  `main` is what's eligible for PROD, still gated by the manual approval
-  below regardless of branch.
-- Neither `ci-testing` nor `qa-pipeline` had two deploy environments to map
-  branches onto — this mapping exists because this repo does, not because
-  it was copied from anywhere.
+**Branch mapping — corrected per ADR-009, see that ADR for the full
+investigation.**
+- **Stage 7 MUST** run `if: github.ref == 'refs/heads/main'` — same
+  trigger as Stage 9, same pipeline run, same image built by that run's
+  Stage 5/6. **MUST NOT** trigger on `staging` — the original mapping
+  (Stage 7 on `staging`, Stage 9 on `main`) required two independently
+  built images for what `constraints.md` requires to be one; `ADR-009`
+  documents why that violated this repo's own non-negotiable build-once
+  guarantee, and why the mapping was corrected rather than patched around
+  with git-history reconstruction.
+- **Stage 9 MUST** run `if: github.ref == 'refs/heads/main'` — unchanged.
+  Still gated by the manual approval below regardless of branch.
+- Both stages consuming the same run's build is not incidental — it's the
+  entire mechanism that makes `docs/rules/constraints.md`'s image-identity
+  guarantee checkable rather than assumed.
 - **Both stages end with a smoke test, not just a deploy call** — see
   `docs/rules/smoke-testing.md`. A deploy mechanism reporting success is not
   the same claim as the deployed service actually serving requests; Stage 7
@@ -185,7 +195,7 @@ all.
 ## GitHub environments
 | Environment | Protection rule | `deployment_branch_policy` |
 |---|---|---|
-| `qa` | None (automatic deploy) | MUST be explicitly configured to allow only `staging` — `cloud-deploy-legacy-audit-results.md` §4/§5 confirmed `null` (not "restricted," genuinely unset) was part of why an auto-deploy from a non-`main` branch was possible there |
+| `qa` | None (automatic deploy) | MUST be explicitly configured to allow only `main` — corrected per `ADR-009`; previously `staging`, which no longer matches Stage 7's real trigger |
 | `prod` | Required reviewer: repository owner, enforced via GitHub environment protection | MUST be explicitly configured to allow only `main` |
 
 **Why "via environment protection, not pipeline logic alone"**: restated

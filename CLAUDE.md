@@ -17,29 +17,17 @@ gate thresholds, SonarCloud rule configuration, or Cypress mocking strategy —
 those are `qa-pipeline`'s decisions (and, transitively, `ci-testing`'s),
 inherited as-is, not reopened here. Also out of scope: changes to backend or
 frontend application logic in general — this repo containerizes and deploys
-the app, it does not modify what the app does — **with one accepted
-exception, real authentication (see below), not a general license to touch
-application logic elsewhere.**
+the app, it does not modify what the app does. Real authentication is out of
+scope too (see below).
 
-**Exception on record: real authentication (`ADR-001`).** `qa-pipeline`
-recorded, in the commit that wrote `docs/rules/testing-and-quality-gates.md`
-(`8b07d0d`, `forum-app-qa-pipeline`), that the app's spoofable
-`X-User-ID`-header authentication model was "deferred to cloud-deploy" —
-that intent never made it into `qa-pipeline`'s own committed prose, only its
-commit message. `ADR-001` accepts that handoff explicitly. This is scope
-acceptance only — the mechanism (JWT, sessions, or another approach) is not
-yet designed and gets its own follow-up ADR once it is. Any other
-application-logic change still requires the same exceeds-scope justification
-below; this is the one specific instance on record, not a precedent for
-touching business logic generally.
+Real authentication is out of scope; see `ADR-001` and its amendment.
 
 The general exception mechanism: this repo may exceed TP8's literal scope
 when doing so is a condition for this repo's own declared guarantees to be
 real, not for general improvement — see `docs/rules/documentation.md`'s
-ADR-justification category (d) and `ADR-000` for the criterion and its
-limits. `ADR-001` is the concrete instance currently on record; if another
-arises, it gets its own ADR under the same criterion, not folded silently
-into unrelated work.
+ADR-justification category (d) for the criterion. Each instance gets its
+own ADR that cites the criterion, never folded silently into unrelated
+work.
 
 ## Methodology (see ADR-000)
 Decisions in this repo are not modeled on how `forum-app-cloud-deploy-legacy`

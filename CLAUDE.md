@@ -25,9 +25,9 @@ Real authentication is out of scope; see `ADR-001` and its amendment.
 The general exception mechanism: this repo may exceed TP8's literal scope
 when doing so is a condition for this repo's own declared guarantees to be
 real, not for general improvement — see `docs/rules/documentation.md`'s
-ADR-justification category (d) and `ADR-000` for the criterion and its
-limits. Each instance gets its own ADR that cites the criterion, never
-folded silently into unrelated work.
+ADR-justification category (d) for the criterion. Each instance gets its
+own ADR that cites the criterion, never folded silently into unrelated
+work.
 
 ## Methodology (see ADR-000)
 Decisions in this repo are not modeled on how `forum-app-cloud-deploy-legacy`

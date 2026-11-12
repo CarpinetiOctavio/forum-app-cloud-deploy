@@ -18,6 +18,8 @@ set -euo pipefail
 #                entrypoint substituted this environment's backend URL
 #                (ADR-006). nginx serves index.html with 200 even when that
 #                substitution failed, so the root page alone can't show it.
+#                The match is a substring: it detects a different scheme or
+#                host, not path differences such as a trailing slash.
 
 if [ "$#" -lt 1 ]; then
   echo "::error::usage: smoke-test.sh <url> [json | frontend <expected-api-url>]" >&2

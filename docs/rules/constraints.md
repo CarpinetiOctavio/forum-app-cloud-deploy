@@ -114,10 +114,7 @@ why.
   Stages 1–4 section, which link to `qa-pipeline`'s own relevant ADRs
   where this repo's rules build on a decision made there). This is
   `CLAUDE.md`'s scope boundary,
-  restated here as a hard constraint, not a new rule. **Exception**: real
-  authentication (`ADR-001`) will require changes here once its mechanism
-  is designed — the one accepted case where this constraint doesn't hold,
-  not a general opening to touch business logic.
+  restated here as a hard constraint, not a new rule.
 - Some inherited test descriptions remain in Spanish, deliberately —
   `qa-pipeline`'s own `ADR-008` decided this, for reasons specific to that
   repo. That is not a leftover to "clean up" here; translating it would be
@@ -131,16 +128,6 @@ Kubernetes or any orchestration beyond what Render provides natively;
 multiple replicas or autoscaling (Render's free tier doesn't offer them,
 and there's no budget constraint requiring them — see `ADR-000`); blue/green
 or canary deployment strategies; any new application feature, endpoint, or
-business-logic change **other than real authentication**.
+business-logic change, real authentication included.
 
-**Real authentication is the one accepted exception — see `ADR-001`, not a
-contradiction of this section.** `qa-pipeline` recorded, in the commit that
-wrote `docs/rules/testing-and-quality-gates.md` (`8b07d0d`), that the
-spoofable `X-User-ID`-header model was "deferred to cloud-deploy" — intent
-that never reached `qa-pipeline`'s own committed prose. Combined with
-`cloud-deploy-legacy-audit-results.md` §7 confirming the design
-live-exploitable, this repo accepts the scope in `ADR-001`. Accepting scope
-is not the same claim as having designed or shipped the fix: the mechanism
-is a separate, future decision, documented in its own ADR once real design
-work happens — nothing about this exception licenses touching any other
-application feature, endpoint, or business logic.
+Real authentication is out of scope; see `ADR-001` and its amendment.

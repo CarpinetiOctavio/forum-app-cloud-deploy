@@ -106,3 +106,9 @@ raised before.
   cleanup of old, superseded SHAs is a real operational concern for a
   long-lived project but is out of scope for this repository's current
   size and lifecycle.
+
+## Amendment (2026-11-11): deploys reference the digest
+
+The deploy step and Render configuration now reference images by digest
+(see `ADR-007`'s amendment); the SHA tag is still published for
+traceability.

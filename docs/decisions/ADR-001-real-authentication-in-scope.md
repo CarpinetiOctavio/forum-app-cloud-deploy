@@ -1,7 +1,7 @@
 # ADR-001: Real authentication is in scope for this repo — accepted, not yet designed
 
 **Date:** 2026-08-04
-**Status:** Accepted (scope only — the mechanism is a separate, future decision)
+**Status:** Accepted, reversed by amendment (2026-11-11): authentication is out of scope, see below
 
 ## Context
 
@@ -132,3 +132,45 @@ true today and doesn't need implementation to back it; the mechanism isn't.
   explicitly — per the series' forward-propagation rule, corrections travel
   forward only. This ADR, citing `8b07d0d` by hash, is where that
   reconciliation lives from now on.
+
+## Amendment (2026-11-11): authentication is out of scope
+
+**Context.** TP8 covers CI/CD and automation: containerization, a registry,
+deployment to QA and PROD, the approval gate between them, and
+environment-scoped secrets. Authentication is not part of it, and the
+application is deliberately rudimentary. This ADR was written under the
+series' earlier framing, which went beyond each assignment wherever a
+reviewer would flag a gap. The series has since narrowed its declared scope
+to CI/CD, and this amendment follows from that change. Applying criterion
+(d) of `docs/rules/documentation.md`, which this ADR did not apply,
+authentication does not meet it either: it is not a condition for any
+guarantee this repository declares (one image built once, the same digest
+promoted to PROD, a gate enforced outside the workflow, environment-scoped
+secrets).
+
+**Decision.** Real authentication is out of scope for this repository. This
+adopts, explicitly, the first alternative this ADR rejected: leaving the
+design where `qa-pipeline` left it, permanently. The reasons for that
+rejection no longer hold:
+- *`qa-pipeline`'s recorded intent (`8b07d0d`).* A handoff stated in a
+  commit message does not set this repository's scope; the series' scope
+  is TP8's.
+- *No repository left to defer it to.* Declaring authentication out of
+  scope closes the chain instead of extending it: the series states that it
+  will not resolve this, rather than passing it on.
+- *A confirmed, live-exploitable design in what this repository deploys.*
+  It stays, declared as a known limitation (see Consequences).
+
+**Consequences.**
+- Every environment this repository deploys, QA and PROD, carries the
+  design `cloud-deploy-legacy-audit-results.md` §7 confirmed exploitable
+  live: a request presenting another account's `X-User-ID` can delete that
+  account's content. These environments are demonstrations with ephemeral
+  data (`ADR-005`), not services for real users.
+- `CLAUDE.md`, `docs/rules/constraints.md` and `docs/rules/deployment.md`,
+  which presented authentication as an accepted exception, are updated in
+  the same change.
+- `ADR-000`, `ADR-002`, `ADR-005` and `ADR-007` cite this ADR as precedent,
+  in some cases for reasoning it does not contain; those mentions are not
+  edited.
+- The follow-up mechanism ADR this ADR required is no longer planned.

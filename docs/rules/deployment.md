@@ -59,9 +59,8 @@ Render or writing anything further in this file.
 | `REACT_APP_API_URL` | `forum-frontend-qa`, `forum-frontend-prod` | `forum-backend-qa`'s real public URL, once that service exists | `forum-backend-prod`'s real public URL, once that service exists | `ADR-006`. Absent, falls back to `localhost:8080` — a loud, immediately visible failure in a deployed environment, not a silent one. |
 
 No credential appears in this list — neither container reads one from the
-environment today. If that changes (`ADR-001`'s real-authentication
-follow-up work is the known future candidate), this table gets updated
-then, not in advance.
+environment today. If that changes, this table gets updated then, not in
+advance.
 
 ## Persistence — this repo's own decision, not `-legacy`'s
 This repo's application code is `qa-pipeline@v1.0.0`'s, not

@@ -7,7 +7,7 @@ concept from software engineering literature/practice relevant to this repo's sc
 (containerization, container registry, CI/CD deployment, cloud hosting), (b) an
 explicit scope boundary of TP8, (c) verified evidence from this repo's own history,
 or (d) a condition for this repo's own declared guarantees to be real, even where it
-exceeds TP8's literal scope — see `ADR-000` for the criterion and its limits.
+exceeds TP8's literal scope.
 "Because the other repo does it this way" is not a valid justification on its own.
 
 ## Cross-repo references

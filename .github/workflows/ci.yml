@@ -223,14 +223,19 @@ jobs:
         working-directory: ./frontend
         run: npx --yes npm@12.0.2 install
 
+      # Started and waited for here, not through the action's own start/wait-on:
+      # see ADR-010.
+      - name: Start the frontend dev server
+        working-directory: ./frontend
+        run: |
+          npm start &
+          npx --ignore-scripts --yes wait-on@9.1.0 http-get://localhost:3000 --timeout 60000
+
       - name: Run Cypress
         uses: cypress-io/github-action@fa4a118725a8f001170d49631ea89e5d66fee626 # v7.4.1
         with:
           working-directory: frontend
           install: false
-          start: npm start
-          wait-on: 'http://localhost:3000'
-          wait-on-timeout: 60
 
   summary:
     name: Test Summary

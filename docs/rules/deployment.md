@@ -4,8 +4,9 @@
 This file states how Render itself is configured and how this repo reasons
 about promoting an artifact through it. Read `docs/rules/constraints.md`
 first. **This file does not re-decide the deploy mechanism** — decided in
-`ADR-007` (deploy hooks trigger, `RENDER_API_KEY` reads status only),
-stated as a requirement in `docs/rules/pipeline.md`'s Stage 7/9 section.
+`ADR-007` (deploy hooks trigger, `RENDER_API_KEY` only reads: deploy
+status and the service URL), stated as a requirement in
+`docs/rules/pipeline.md`'s Stage 7/9 section.
 Referenced here, not duplicated — the same mistake `cloud-deploy-legacy`
 made by describing the same wrong mechanism independently in four files
 (its own `ADR-002-hosting.md`, `deployment.md`, `pipeline.md`, and
@@ -86,7 +87,7 @@ mechanism needs a different five.
 | `RENDER_DEPLOY_HOOK_FRONTEND_QA` | `qa` environment | Hook URL, `forum-frontend-qa` | Stage 7, frontend deploy trigger |
 | `RENDER_DEPLOY_HOOK_BACKEND_PROD` | `prod` environment | Hook URL, `forum-backend-prod` | Stage 9, backend deploy trigger |
 | `RENDER_DEPLOY_HOOK_FRONTEND_PROD` | `prod` environment | Hook URL, `forum-frontend-prod` | Stage 9, frontend deploy trigger |
-| `RENDER_API_KEY` | Repository level | Render account API key | Read-only "Retrieve deploy" polling only (both stages) — **MUST NOT** be used for any write call, per `ADR-007`'s Consequences |
+| `RENDER_API_KEY` | Repository level | Render account API key | Read-only `GET` calls only: deploy status and the service URL (both stages) — **MUST NOT** be used for any write call, per `ADR-007`'s Consequences |
 
 **MUST**: scope the four hook secrets correctly — QA-only under the `qa`
 GitHub environment, PROD-only under `prod`, never both; `RENDER_API_KEY`
@@ -100,8 +101,8 @@ specific, documented cost of that exact mistake happening once already.
 ## Image promotion — the guarantee this whole repo exists to demonstrate
 **MUST**: the image deployed to PROD is the exact image — same digest, same
 commit-SHA tag — that was deployed to QA. Render (or whatever the chosen
-mechanism is) redeploys an existing tag for PROD; it does not receive a
-freshly built one.
+mechanism is) redeploys an existing image digest for PROD; it does not
+receive a freshly built one.
 
 **Why this is the one rule this file treats as most load-bearing**: this is
 `docs/rules/docker.md` Rule 1's guarantee (build once, promote everywhere)

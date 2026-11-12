@@ -168,17 +168,23 @@ answers:
 
 - **Stage 7 and Stage 9 MUST trigger their deploys via Render deploy
   hooks** — `POST` to the service's hook URL with the `imgURL` query
-  parameter set to this pipeline run's exact `${{ github.sha }}`-tagged
-  image. **MUST NOT** omit `imgURL` — doing so silently redeploys whatever
-  tag the service last had configured, defeating `ADR-003`'s guarantee.
+  parameter set, percent-encoded, to the digest (`@sha256:…`) of the image
+  this pipeline run built, and **MUST** log that image reference in the
+  deploy job, so that QA and PROD running the same digest is checkable in
+  the run itself (`ADR-007`'s amendment). **MUST NOT** use the
+  `${{ github.sha }}` tag for the deploy: a rerun for the same commit
+  repoints the tag to a rebuilt image. **MUST NOT** omit `imgURL` — doing
+  so silently redeploys whatever image the service last had configured,
+  defeating `ADR-003`'s guarantee.
   Four hook URLs, one per service (`forum-backend-qa`, `forum-frontend-qa`,
   `forum-backend-prod`, `forum-frontend-prod`).
 - **MUST** poll the Render API's read-only "Retrieve deploy" endpoint
   (`GET /v1/services/{id}/deploys/{deployId}`), using the deploy ID the
   hook's own response returns, to determine when the deploy has actually
   finished before running the smoke test against it — not a fixed delay.
-  **MUST NOT** use `RENDER_API_KEY` for anything other than this `GET`
-  call — no write operation through this pipeline is authorized to use it,
+  **MUST NOT** use `RENDER_API_KEY` for anything other than read-only
+  `GET` calls (this deploy status and the service's public URL) — no write
+  operation through this pipeline is authorized to use it,
   per `ADR-007`'s Consequences.
 - **MUST** treat a `202` hook response with no deploy ID (the
   overlapping-deploys `Wait`-policy case) as "a deploy is already in

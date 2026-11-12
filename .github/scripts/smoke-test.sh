@@ -23,7 +23,10 @@ EXPECT_JSON="${2:-}"
 
 echo "Smoke testing: $URL" >&2
 
-HTTP_CODE=$(curl -sS -o /tmp/smoke-test-body -w "%{http_code}" "$URL")
+# --max-time bounds the request so a service that never answers fails the
+# job instead of hanging it. 90 s covers a Render Free cold start, which
+# Render documents at about one minute.
+HTTP_CODE=$(curl -sS --max-time 90 -o /tmp/smoke-test-body -w "%{http_code}" "$URL")
 
 if [ "$HTTP_CODE" != "200" ]; then
   echo "::error::smoke test failed: $URL returned HTTP $HTTP_CODE" >&2

@@ -158,3 +158,30 @@ as a convenience trade worth taking for its own sake.
   future change that adds a write call using this same secret must be
   treated as reopening this ADR's blast-radius analysis, not as a minor
   extension.
+
+## Amendment (2026-11-11): deploys target the image digest, not the tag
+
+**What changes.** Each deploy hook call now sets `imgURL` to the digest of
+the image this pipeline run built (`…@sha256:…`, percent-encoded), taken
+from the build job's output, instead of the `${{ github.sha }}` tag, and
+the deploy job logs that image reference. The mechanism this ADR decided —
+hooks to trigger, the API key for read-only status — is unchanged.
+
+**Why.** `docs/rules/constraints.md` and `docs/rules/deployment.md` require
+the image digest of the QA deploy and of the PROD deploy to be identical
+and checkable against the deploy mechanism's own logs. With the tag, the
+deploy logs never showed a digest, so that rule was not met. The tag is
+also mutable in one real case: a rerun for the same commit rebuilds the
+image and repoints the tag, so a PROD deploy still waiting for approval
+could ship bytes QA never ran. A digest cannot be repointed.
+
+**`ADR-003`'s decision is unchanged.** Every image is still pushed with its
+commit-SHA tag, never `latest`; the tag remains how an image is traced to
+its commit. Two of its Consequences, that Render service configurations
+reference a SHA tag and that the deploy step passes the SHA tag, now hold
+for the digest of that tagged image instead; `ADR-003` records this in its
+own amendment.
+
+**Correction.** `RENDER_API_KEY` is used only for read-only `GET` calls:
+the deploy status this ADR describes, and the service lookup that resolves
+the public URL the smoke test needs — not for the status call alone.

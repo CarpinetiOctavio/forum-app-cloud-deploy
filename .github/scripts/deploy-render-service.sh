@@ -56,6 +56,11 @@ if [ -z "$SERVICE_ID" ]; then
   exit 1
 fi
 echo "Service ID: $SERVICE_ID" >&2
+echo "Image: $IMAGE_URL" >&2
+
+# imgURL is always percent-encoded: a digest reference carries '@', and the
+# encoded form is what Render's own deploy-hook examples use.
+IMAGE_URL_ENCODED=$(jq -rn --arg v "$IMAGE_URL" '$v | @uri')
 
 # --- Trigger the deploy. Retries with backoff on a 2xx response without a
 #     deploy id (a deploy is already in progress) and on transient failures;
@@ -64,7 +69,7 @@ DEPLOY_ID=""
 BACKOFF=15
 TRIGGER_ATTEMPTS=5
 for attempt in $(seq 1 "$TRIGGER_ATTEMPTS"); do
-  CODE=$(http_request -X POST "${HOOK_URL}&imgURL=${IMAGE_URL}")
+  CODE=$(http_request -X POST "${HOOK_URL}&imgURL=${IMAGE_URL_ENCODED}")
   if [[ "$CODE" == 2?? ]]; then
     DEPLOY_ID=$(jq -r '.deploy.id // empty' "$BODY" 2>/dev/null || true)
     if [ -n "$DEPLOY_ID" ]; then
@@ -128,6 +133,13 @@ done
 if [ "$STATUS" != "live" ]; then
   echo "::error::timed out waiting for deploy $DEPLOY_ID to go live (last status: $STATUS)" >&2
   exit 1
+fi
+
+# If Render's own deploy record reports an image digest, log it too: it is
+# Render's account of what is running, next to the image this script sent.
+RENDER_DIGESTS=$(jq -r '[.. | strings | select(test("^sha256:[0-9a-f]{64}$"))] | unique | join(" ")' "$BODY" 2>/dev/null || true)
+if [ -n "$RENDER_DIGESTS" ]; then
+  echo "Digest reported by Render: $RENDER_DIGESTS" >&2
 fi
 
 # --- Resolve the service's real public URL (read-only GET, same key) ---

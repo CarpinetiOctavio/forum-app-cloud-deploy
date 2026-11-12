@@ -76,3 +76,9 @@ ready" moves.
   since corrections in this series travel forward only.
 - No scheduled run is added, so future runner drift will again surface on
   the next push or pull request.
+
+## Amendment (2026-11-12): validation reference
+
+"This pull request" in Consequences is pull request #15. Its CI run
+`43131574727` passed Stage 4: the new step waited 11 s for the dev server,
+then every Cypress spec passed.

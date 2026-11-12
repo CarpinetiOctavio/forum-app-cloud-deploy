@@ -348,7 +348,7 @@ jobs:
         run: bash .github/scripts/smoke-test.sh "${{ steps.deploy_backend.outputs.url }}/api/posts" json
 
       - name: Smoke test QA frontend
-        run: bash .github/scripts/smoke-test.sh "${{ steps.deploy_frontend.outputs.url }}"
+        run: bash .github/scripts/smoke-test.sh "${{ steps.deploy_frontend.outputs.url }}" frontend "${{ steps.deploy_backend.outputs.url }}"
 
   deploy-prod:
     name: Deploy to PROD (Render)
@@ -385,4 +385,4 @@ jobs:
         run: bash .github/scripts/smoke-test.sh "${{ steps.deploy_backend.outputs.url }}/api/posts" json
 
       - name: Smoke test PROD frontend
-        run: bash .github/scripts/smoke-test.sh "${{ steps.deploy_frontend.outputs.url }}"
+        run: bash .github/scripts/smoke-test.sh "${{ steps.deploy_frontend.outputs.url }}" frontend "${{ steps.deploy_backend.outputs.url }}"

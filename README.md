@@ -1,8 +1,8 @@
 # Forum App — Cloud Deploy
 
-Work in progress. This repository extends the pipeline of [forum-app-qa-pipeline](https://github.com/CarpinetiOctavio/forum-app-qa-pipeline) with container images, a container registry, and deployment to QA and production on Render. Today `main` runs tests and quality gates and builds and publishes the images to ghcr.io; deployment is not implemented on `main` yet.
+Work in progress. This repository extends the pipeline of [forum-app-qa-pipeline](https://github.com/CarpinetiOctavio/forum-app-qa-pipeline) with container images, a container registry, and deployment to QA and production on Render. Today `main` runs tests and quality gates and builds and publishes the images to ghcr.io; it now also deploys those same images to QA and, after manual approval, to PROD.
 
-This README will be rewritten when deployment works. Until then, the decisions made so far are in [`docs/decisions/`](docs/decisions/).
+This README will be rewritten in a later pass. Until then, the decisions made so far are in [`docs/decisions/`](docs/decisions/).
 
 ## AI usage disclosure
 

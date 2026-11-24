@@ -224,3 +224,19 @@ run of `ci.yml`.
   up to 30 days after the initial run ("Re-running workflows and jobs",
   consulted 2026-11-23), so it cannot reach an older release; a re-run of
   the whole run also rebuilds the images and moves their tags.
+
+## Amendment (2026-11-24): a deploy waiting for PROD approval holds the concurrency group
+
+Observed in this repository's rollback runs
+(`docs/audits/2026-11-24-execution-record.md`). While the PROD job of run
+`45442208645` waited for approval, the QA job of run `45442757655`, in the
+same `render-deploy` group, stayed pending without cancelling it, and
+started 4 s after that PROD job finished. The `qa` environment has no
+protection rules, so nothing else held that job; a job waiting for
+environment approval therefore holds the group. It is not a pending job of
+the group, and a newer job does not replace it; the replacement described
+in the amendment of 2026-11-23 still applies to a job queued behind one that
+is running. In operation, a rollback does not reach QA while a PROD deploy
+waits for approval, until that approval is resolved. Only resolution by
+approval was observed: an approval expires after 30 days (`ADR-000`), and
+whether a rejection or the expiry releases the group was not observed.

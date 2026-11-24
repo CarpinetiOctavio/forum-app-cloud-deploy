@@ -1,5 +1,7 @@
 # Operating rules — Docker (forum-app-cloud-deploy)
 
+> **Agent instructions.** This file is operating context for an AI assistant working in this repository, not project documentation. Decisions and their reasons are in [`docs/decisions/`](../decisions/).
+
 ## Purpose and authority
 This file governs how a Dockerfile in this repo must be written. Read
 `docs/rules/constraints.md` first — every rule here derives from a

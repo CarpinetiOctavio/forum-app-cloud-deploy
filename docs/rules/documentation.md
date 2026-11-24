@@ -1,5 +1,7 @@
 # Operating rules — documentation (forum-app-cloud-deploy)
 
+> **Agent instructions.** This file is operating context for an AI assistant working in this repository, not project documentation. Decisions and their reasons are in [`docs/decisions/`](../decisions/).
+
 ## ADR requirements
 Every ADR must include: the problem/question, the alternatives actually considered,
 the decision, and the justification. The justification must trace to one of: (a) a

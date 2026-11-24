@@ -1,5 +1,7 @@
 # Operating rules — Pipeline (forum-app-cloud-deploy)
 
+> **Agent instructions.** This file is operating context for an AI assistant working in this repository, not project documentation. Decisions and their reasons are in [`docs/decisions/`](../decisions/).
+
 ## Purpose and authority
 This file states the required structure of this repo's CI/CD pipeline.
 Read `docs/rules/constraints.md` first — every rule here derives from a

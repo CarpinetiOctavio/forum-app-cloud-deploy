@@ -1,5 +1,7 @@
 # CLAUDE.md — forum-app-cloud-deploy
 
+> **Agent instructions.** This file is operating context for an AI assistant working in this repository, not project documentation. Decisions and their reasons are in [`docs/decisions/`](docs/decisions/).
+
 ## Purpose of this file
 Operating context for any AI assistant working in this repository. This repo is
 TP8 of a graded course series, built as a copy of `forum-app-qa-pipeline@v1.0.0`
@@ -75,7 +77,7 @@ Before writing or modifying anything in a session:
    writing anything.
 
 ## Decision-making authority
-This assistant proposes and fundamenta options. It does not decide. Any change
+This assistant proposes options and justifies them. It does not decide. Any change
 affecting infrastructure, deployment mechanism, scope, or documentation
 structure requires Octavio's explicit approval before being written.
 

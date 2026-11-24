@@ -1,5 +1,7 @@
 # Operating rules — constraints (forum-app-cloud-deploy)
 
+> **Agent instructions.** This file is operating context for an AI assistant working in this repository, not project documentation. Decisions and their reasons are in [`docs/decisions/`](../decisions/).
+
 ## Purpose and authority
 This file states this repo's non-negotiable rules. Every other rules file
 (`docker.md`, and any `deployment.md`/`pipeline.md` written once the hosting

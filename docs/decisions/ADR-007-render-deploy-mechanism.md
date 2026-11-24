@@ -6,17 +6,13 @@
 ## Context
 
 `docs/rules/pipeline.md` left this decision explicitly open since it was
-first written: `cloud-deploy-legacy` documented a Render **deploy hook**
-mechanism in four separate files (its own `ADR-002-hosting.md`,
-`deployment.md`, `pipeline.md`, `constraints.md` — unrelated to, and
-predating, this repository's own differently-numbered `ADR-002`, about the
-container registry) and actually implemented a different one — the **Render
-REST API**, authenticated with an account-scoped `RENDER_API_KEY` — without
-ever reconciling the two (`cloud-deploy-legacy-audit-results.md` §4). This
-repository does not inherit either choice by default; per
-`docs/rules/documentation.md`'s "documentation follows implementation"
-rule, the decision is made once, deliberately, before either mechanism is
-implemented — not asserted from what `-legacy` happened to run.
+first written. `cloud-deploy-legacy` documented a Render **deploy hook** and
+implemented the **Render REST API**, authenticated with an account-scoped
+`RENDER_API_KEY`, without reconciling the two (`ADR-000`;
+`cloud-deploy-legacy-audit-results.md` §4). This repository does not inherit
+either choice by default: per `docs/rules/documentation.md`'s "documentation
+follows implementation" rule, the decision is made once, deliberately,
+before either mechanism is implemented.
 
 **Why the mechanism matters beyond "which HTTP call to make":** `ADR-003`'s
 commit-SHA tagging strategy is not just an auditability preference. Its real
@@ -128,9 +124,9 @@ as a convenience trade worth taking for its own sake.
 
 | Alternative | Reason not chosen |
 |---|---|
-| Render API for both triggering and status (what `-legacy` actually ran) | Rejected once the functional gap motivating it (belief that hooks couldn't target a specific tag) was checked and found false — with equivalent functionality, there's no longer a reason to accept the larger blast radius. |
+| Render API for both triggering and status (what `-legacy` actually ran) | The gap that motivated it does not exist (finding 1); with equivalent functionality, the larger blast radius has no reason (see Rationale). |
 | Deploy hooks only, no status polling, smoke test fires on a fixed delay after the trigger call | Rejected: a fixed delay is either too short (smoke test runs against the still-terminating old container, per Render's zero-downtime swap) or wastefully long — real status polling, from finding 3, is available for the cost of one read-only credential already required for exactly this purpose. |
-| A service-scoped or read-only Render API key | Does not exist — confirmed against two current, independent sources (finding 2). Not a real option to weigh, not a gap in this analysis. |
+| A service-scoped or read-only Render API key | Does not exist (finding 2). |
 | Store the deploy hook URLs unauthenticated as build-time constants rather than GitHub Secrets | Rejected without extended consideration: `docs/rules/constraints.md` already treats every Render credential, hook URLs included, as a value that must be a GitHub Secret — a hook URL is a bearer credential (anyone with it can trigger a deploy) regardless of its narrower blast radius relative to an API key. |
 
 ## Consequences
@@ -139,13 +135,9 @@ as a convenience trade worth taking for its own sake.
   mechanism as a requirement, replacing the two-option list it held while
   this decision was open.
 - `docs/rules/deployment.md`'s Secrets section is rewritten to name the
-  real secrets this decision requires: `RENDER_DEPLOY_HOOK_{BACKEND,FRONTEND}_{QA,PROD}`
-  (four, one per service, each a bearer URL) and `RENDER_API_KEY` (one,
-  repository-level, used only for the read-only status call) — not the
-  `RENDER_DEPLOY_HOOK_QA`/`RENDER_DEPLOY_HOOK_PROD` two-secret shape
-  `-legacy`'s documentation (never its implementation) described, and not
-  the `RENDER_SERVICE_ID_*` four-secret shape `-legacy` actually used
-  instead.
+  real secrets this decision requires: four hook URLs, one per service, and
+  one repository-level `RENDER_API_KEY` for the read-only status call —
+  neither of the shapes `-legacy` documented or used.
 - Every deploy call MUST include `imgURL`/`imageUrl` set to this pipeline
   run's exact commit SHA — omitting it would silently fall back to
   whatever tag the service last had configured, defeating `ADR-003`'s
@@ -153,11 +145,9 @@ as a convenience trade worth taking for its own sake.
 - The pipeline MUST branch on a hook response containing `202` with no
   deploy ID (finding 4) — treated as "a deploy is already in progress,"
   not as a failure, with a retry/backoff rather than an immediate error.
-- `RENDER_API_KEY`'s code paths are restricted to `GET` calls by this
-  pipeline's own implementation, not by anything Render enforces — any
-  future change that adds a write call using this same secret must be
-  treated as reopening this ADR's blast-radius analysis, not as a minor
-  extension.
+- Any future change that adds a write call with `RENDER_API_KEY` reopens
+  this ADR's blast-radius analysis; the `GET`-only restriction is enforced
+  by this pipeline's code, not by Render (see Rationale).
 
 ## Amendment (2026-11-11): deploys target the image digest, not the tag
 

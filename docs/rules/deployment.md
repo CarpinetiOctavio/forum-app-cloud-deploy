@@ -137,7 +137,8 @@ by tag.
    hook is called: the form `sha256:<64 hex>`, that the image exists in
    ghcr.io, that the commit-SHA tag of that image currently points to it,
    and that this commit has a successful deployment from `main` in `prod`
-   (GitHub Deployments API).
+   created by a run of `ci.yml` (GitHub Deployments API; deployments
+   created by `rollback.yml` do not count).
 4. QA is redeployed and smoke-tested, then PROD waits for the same
    approval as the pipeline, and is redeployed and smoke-tested.
 

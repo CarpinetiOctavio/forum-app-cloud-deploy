@@ -189,7 +189,8 @@ are in `docs/rules/deployment.md`, Rollback.
 `main`. Before any hook is called, a read-only check confirms that the
 image exists in ghcr.io, that its commit-SHA tag currently points to that
 digest, and that the commit has a successful deployment from `main` in the
-`prod` environment, as the GitHub Deployments API records it.
+`prod` environment, as the GitHub Deployments API records it, created by a
+run of `ci.yml`.
 
 **Limits.**
 - *The check compares against the current tag.* The Deployments API
@@ -202,7 +203,10 @@ digest, and that the commit has a successful deployment from `main` in the
   infrastructure is added to record digests per deployment.
 - *A rollback's deployments record the commit of `main` at the time of the
   run,* not the commit of the image it deploys; the deploy logs record the
-  digest.
+  digest. Counted, they would let a commit pass the check without ever
+  having reached PROD (a rollback run while `main` is at a commit whose own
+  PROD deploy was never approved). The check therefore counts only
+  deployments whose successful status links to a run of `ci.yml`.
 - *One deploy at a time.* The deploy jobs of the pipeline and of the
   rollback share one concurrency group (`render-deploy`,
   `cancel-in-progress: false`): the running job is never cancelled, but a

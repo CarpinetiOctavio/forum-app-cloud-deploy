@@ -139,15 +139,17 @@ never a second candidate image to reconcile against.
 - Rollback (`deployment.md`'s Rollback section) is unaffected — it already
   depended only on SHA tags never being overwritten (`docker.md` Rule 5),
   not on which stage triggered which deploy.
+
 ## Amendment (2026-11-23): the quality gate on the path to `main`, and the rollback claim
 
 **What was wrong.** `docs/rules/constraints.md` forbids building or pushing
 an image unless every test and static-analysis gate already passed. The
 SonarCloud job never waited for the quality gate, so Stages 5–6 could build
-and push an image with the gate red. On the SonarCloud Free plan the rule
-could not hold on every branch either: there is a quality gate only for
-`main` and for pull requests into `main`, and this record keeps Stages 1–6
-running on every push.
+and push an image with the gate red, and on a push to `main` that image was
+then deployed, to QA and, after approval, to PROD. On the SonarCloud Free
+plan the rule could not hold on every branch either: there is a quality gate
+only for `main` and for pull requests into `main`, and this record keeps
+Stages 1–6 running on every push.
 
 **Decision.**
 - The scanner waits for the quality gate on a push to `main` and on a pull
@@ -163,8 +165,9 @@ running on every push.
 - Stages 1–6 still run on every push, as decided above.
 
 **Why this is in scope.** Criterion (d) of `docs/rules/documentation.md`:
-that no image is built or deployed without passing every gate is a
-guarantee this repository declares, and it was not true. This is not an
+that no image is deployed without passing every gate, and that on the path
+to `main` none is built without them either, is a guarantee this repository
+declares, and it was not true. This is not an
 exception to `constraints.md`'s boundary on the inherited quality stages:
 it adopts `qa-pipeline`'s own decision, not a change made here.
 

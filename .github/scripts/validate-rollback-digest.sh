@@ -4,7 +4,9 @@ set -euo pipefail
 # Checks that an image digest may be used as a rollback target: it must be
 # an image of <image_repo> whose commit-SHA tag currently points to it, and
 # that commit must have a successful deployment from `main` in the `prod`
-# environment. Read-only: it inspects the public registry and reads the
+# environment, created by a run of ci.yml. Deployments created by
+# rollback.yml do not count: they record the commit of main at the time of
+# the rollback, not the commit of the image deployed. Read-only: it inspects the public registry and reads the
 # GitHub Deployments API; it never calls a deploy hook. See
 # docs/rules/deployment.md (Rollback) and ADR-007's amendment of 2026-11-23.
 #
@@ -14,7 +16,7 @@ set -euo pipefail
 # reached PROD is accepted if its commit did. ADR-007's amendment of
 # 2026-11-23.
 #
-# Requires GH_TOKEN (deployments: read) and GITHUB_REPOSITORY.
+# Requires GH_TOKEN (deployments: read, actions: read) and GITHUB_REPOSITORY.
 #
 # Usage: validate-rollback-digest.sh <image_repo> <digest>
 
@@ -42,9 +44,12 @@ DEPLOYMENTS=$(gh api --paginate \
 
 while read -r ID SHA; do
   [ -n "${ID:-}" ] || continue
-  SUCCEEDED=$(gh api "repos/${GITHUB_REPOSITORY}/deployments/${ID}/statuses?per_page=100" \
-    --jq 'any(.[]; .state == "success")')
-  [ "$SUCCEEDED" = "true" ] || continue
+  # The run that created the deployment, from its first success status.
+  RUN_ID=$(gh api "repos/${GITHUB_REPOSITORY}/deployments/${ID}/statuses?per_page=100" \
+    --jq '[.[] | select(.state == "success") | .log_url | capture("/actions/runs/(?<id>[0-9]+)").id] | first // empty')
+  [ -n "$RUN_ID" ] || continue
+  WORKFLOW=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}" --jq '.path')
+  [ "$WORKFLOW" = ".github/workflows/ci.yml" ] || continue
   TAGGED=$(docker buildx imagetools inspect "${IMAGE_REPO}:${SHA}" \
     --format '{{.Manifest.Digest}}' 2>/dev/null || true)
   if [ "$TAGGED" = "$DIGEST" ]; then

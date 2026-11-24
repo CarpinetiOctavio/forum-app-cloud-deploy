@@ -75,7 +75,15 @@ defensible orally. This is the floor this repo must clear, not the ceiling.
   earlier stage failing MUST prevent every later stage from running,
   including image build and any deploy.
 - **MUST NOT**: build or push a Docker image unless every test and
-  static-analysis gate already passed.
+  static-analysis gate already passed. On the path to `main` (a push to
+  `main`, a pull request into `main`), that includes the SonarCloud quality
+  gate. On other branches the SonarCloud Free plan offers no quality gate,
+  so images are built without it (`ADR-009`'s amendment of 2026-11-23).
+- **MUST NOT**: deploy an image built off the path to `main`, either by the
+  pipeline or by rollback.
+    - Why: those images never passed the quality gate. Only a push to `main`
+      deploys (`ADR-009`), and rollback accepts only digests already
+      deployed from `main` (`docs/rules/deployment.md`, Rollback).
 - **MUST**: deploy to QA automatically on a passing pipeline run. **MUST**:
   require a human approval, enforced via GitHub environment protection (not
   by pipeline logic alone), before any deploy to PROD.

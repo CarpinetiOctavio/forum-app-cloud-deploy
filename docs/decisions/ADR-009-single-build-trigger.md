@@ -139,3 +139,44 @@ never a second candidate image to reconcile against.
 - Rollback (`deployment.md`'s Rollback section) is unaffected — it already
   depended only on SHA tags never being overwritten (`docker.md` Rule 5),
   not on which stage triggered which deploy.
+## Amendment (2026-11-23): the quality gate on the path to `main`, and the rollback claim
+
+**What was wrong.** `docs/rules/constraints.md` forbids building or pushing
+an image unless every test and static-analysis gate already passed. The
+SonarCloud job never waited for the quality gate, so Stages 5–6 could build
+and push an image with the gate red. On the SonarCloud Free plan the rule
+could not hold on every branch either: there is a quality gate only for
+`main` and for pull requests into `main`, and this record keeps Stages 1–6
+running on every push.
+
+**Decision.**
+- The scanner waits for the quality gate on a push to `main` and on a pull
+  request into `main`, and only there. This adopts the decision in force in
+  `qa-pipeline`
+  ([its `ADR-002` amendment of 2026-11-12](https://github.com/CarpinetiOctavio/forum-app-qa-pipeline/blob/v1.1.0/docs/decisions/ADR-002-sonarcloud.md#amendment-2026-11-12-the-quality-gate-now-blocks-on-the-path-to-main-within-the-free-plans-limits),
+  `v1.1.0`), with the same condition; the runs and the Free plan's limits
+  are recorded there.
+- `constraints.md`'s rule is adjusted to that path. On the path to `main`,
+  no image is built or pushed without the quality gate passing. On other
+  branches, images are built without it and are never deployed, either by
+  the pipeline or by rollback.
+- Stages 1–6 still run on every push, as decided above.
+
+**Why this is in scope.** Criterion (d) of `docs/rules/documentation.md`:
+that no image is built or deployed without passing every gate is a
+guarantee this repository declares, and it was not true. This is not an
+exception to `constraints.md`'s boundary on the inherited quality stages:
+it adopts `qa-pipeline`'s own decision, not a change made here.
+
+**Consequences.**
+- A SonarCloud outage or a delay longer than the scanner's timeout fails
+  the job, and blocks merges into `main` and the deploy until it recovers.
+- Images built off the path to `main` are never deployed; rollback accepts
+  only digests already deployed from `main` (`docs/rules/deployment.md`,
+  Rollback).
+
+**Correction.** The last Consequence above says rollback "already depended
+only on SHA tags never being overwritten (`docker.md` Rule 5)". It did not
+hold: a rerun moves the tag (`ADR-007`'s amendment of 2026-11-11), so
+rollback goes by digest. Rule 5 also does not say that: it requires tagging
+every image with the commit SHA and forbids `latest` as an image's only tag.

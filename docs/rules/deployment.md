@@ -141,23 +141,10 @@ by tag.
 4. QA is redeployed and smoke-tested, then PROD waits for the same
    approval as the pipeline, and is redeployed and smoke-tested.
 
-**What this does and does not guarantee:**
-- GitHub records the commit of a deployment, not the image digest. The
-  check proves that the commit reached PROD, not that this exact digest
-  did; a digest left untagged by a rerun is rejected (`ADR-007`'s
-  amendment of 2026-11-23).
-- The deployments a rollback creates record the commit of `main` at the
-  time of the run, not the commit of the image; the deploy logs record the
-  digest.
-- A rollback is a deploy: it replaces the container, so the database
-  starts empty, as with any deploy (`ADR-005`).
-- Every deploy job, in `ci.yml` and in `rollback.yml`, is in one
-  concurrency group (`render-deploy`, `cancel-in-progress: false`): one
-  runs at a time, and the running one is never cancelled. A newer pending
-  job replaces an older pending one (GitHub's default), so a pending
-  deploy can be cancelled by a newer one; the cancellation is visible in
-  its run. Whether a job waiting for PROD approval holds the group is not
-  documented by GitHub.
+**Limits** (what the check proves, what a rollback's deployments record,
+the shared concurrency group, the empty database): `ADR-007`'s amendment
+of 2026-11-23. **MUST NOT** state more than that amendment does about what
+a rollback guarantees.
 
 ## QA vs. PROD — what's allowed to differ, what's never allowed to differ
 **Allowed to differ**: runtime environment variables, resource allocation

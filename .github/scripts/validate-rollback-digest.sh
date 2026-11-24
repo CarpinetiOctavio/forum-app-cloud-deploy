@@ -8,10 +8,11 @@ set -euo pipefail
 # GitHub Deployments API; it never calls a deploy hook. See
 # docs/rules/deployment.md (Rollback) and ADR-007's amendment of 2026-11-23.
 #
-# Limit: GitHub records the commit of a deployment, not the image digest. A
-# rerun can build another digest for the same commit and move the tag to it;
-# the old digest is then untagged and rejected here. The check proves that
-# the commit reached PROD, not that this exact digest did.
+# Limit: GitHub records the commit of a deployment, not the image digest, and
+# this compares against the commit's current tag. A digest that was in PROD
+# is rejected if a rerun later moved its tag; a digest from a rerun that never
+# reached PROD is accepted if its commit did. ADR-007's amendment of
+# 2026-11-23.
 #
 # Requires GH_TOKEN (deployments: read) and GITHUB_REPOSITORY.
 #

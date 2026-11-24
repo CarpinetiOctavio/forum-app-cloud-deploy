@@ -79,8 +79,8 @@ Docker build-and-push jobs of Stages 5–6, which both start once
 
 Stages 7 and 9, and the two deploy jobs of `rollback.yml`, share one
 concurrency group (`render-deploy`, `cancel-in-progress: false`): one
-Render deploy at a time. Its limits are in `docs/rules/deployment.md`,
-Rollback.
+Render deploy at a time. Its limits are in `ADR-007`'s amendment of
+2026-11-23.
 
 ## Stages 1–4 — inherited, verified, not re-decided here
 This repo's test suite and quality-gate jobs are what this repo started

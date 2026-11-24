@@ -191,15 +191,27 @@ image exists in ghcr.io, that its commit-SHA tag currently points to that
 digest, and that the commit has a successful deployment from `main` in the
 `prod` environment, as the GitHub Deployments API records it.
 
-**Limit.** The Deployments API records the commit, not the digest, and a
-rerun can produce another digest for the same commit (`ADR-003`'s
-amendment of 2026-11-23). The check proves that the commit reached PROD,
-not that this exact digest did. A digest left untagged by a rerun is
-rejected. No infrastructure is added to record digests per deployment.
-
-**One deploy at a time.** The deploy jobs of the pipeline and of the
-rollback share one concurrency group without cancelling the running job.
-What that does and does not guarantee is in `docs/rules/deployment.md`.
+**Limits.**
+- *The check compares against the current tag.* The Deployments API
+  records the commit, not the digest, and a rerun can produce another
+  digest for the same commit and move the tag to it (`ADR-003`'s amendment
+  of 2026-11-23). So the check fails in both directions: it rejects a
+  digest that was in PROD if a rerun later moved its tag, and it accepts a
+  digest from a rerun that never reached PROD if its commit did. It proves
+  that the commit reached PROD, not that this exact digest did. No
+  infrastructure is added to record digests per deployment.
+- *A rollback's deployments record the commit of `main` at the time of the
+  run,* not the commit of the image it deploys; the deploy logs record the
+  digest.
+- *One deploy at a time.* The deploy jobs of the pipeline and of the
+  rollback share one concurrency group (`render-deploy`,
+  `cancel-in-progress: false`): the running job is never cancelled, but a
+  newer pending job replaces an older pending one (GitHub's default), so a
+  pending deploy, PROD included, can be cancelled by a newer one; the
+  cancellation is visible in its run. Whether a job waiting for PROD
+  approval holds the group is not documented by GitHub.
+- *A rollback is a deploy:* it replaces the container, so the database
+  starts empty (`ADR-005`).
 
 **Alternatives rejected.**
 - *Render's dashboard rollback.* It skips the approval gate for PROD and

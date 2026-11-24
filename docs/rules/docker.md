@@ -1,5 +1,7 @@
 # Operating rules — Docker (forum-app-cloud-deploy)
 
+> **Agent instructions.** This file is operating context for an AI assistant working in this repository, not project documentation. Decisions and their reasons are in [`docs/decisions/`](../decisions/).
+
 ## Purpose and authority
 This file governs how a Dockerfile in this repo must be written. Read
 `docs/rules/constraints.md` first — every rule here derives from a
@@ -49,10 +51,11 @@ usable by anyone who gains any code-execution foothold in it, and none of
 it is needed for the container to do its one job.
 
 **Required structure**:
-- **Backend**: stage 1 (`builder`) compiles a single, statically linked Go
-  binary from source. Stage 2 (final) starts from a minimal base image and
-  `COPY`s **only** that compiled binary from stage 1. No source file, no Go
-  toolchain, is present in stage 2.
+- **Backend**: stage 1 (`builder`) compiles a single Go binary from source,
+  with CGO enabled because `go-sqlite3` requires it; the binary needs the C
+  library at runtime, so stage 2 (final) starts from a minimal `alpine`
+  image, not `scratch`, and `COPY`s **only** that compiled binary from
+  stage 1. No source file, no Go toolchain, is present in stage 2.
 - **Frontend**: stage 1 (`builder`) runs `npm ci` then `npm run build`.
   Stage 2 (final, an `nginx:alpine`-family image) `COPY`s **only** the build
   output directory from stage 1 into nginx's serving directory. No
@@ -105,10 +108,16 @@ not `alpine`; `node:22-alpine`, not `node`; `nginx:1.27-alpine`, not
 `nginx:alpine` alone if a more specific pin is available.
 
 **Why**: an unpinned tag is not a fixed reference — `alpine` today and
-`alpine` in three weeks can resolve to different underlying images. A
-Dockerfile that hasn't changed producing a different image later is a
-reproducibility failure, and it fails silently — nothing errors, the build
-just quietly ships something different than last time.
+`alpine` in three weeks can resolve to different underlying images, and a
+Dockerfile that hasn't changed would quietly start from a different base.
+Pinning narrows that drift; it does not make builds reproducible. Two
+builds of the same source still produce different digests (layer
+timestamps, Go build IDs; `ADR-009`): commits `7ee46bf` and `3b158c0` have
+identical `backend/` and `frontend/` trees, and their runs
+(`43306631470`, `43341781168`) pushed different digests for both images.
+What this repository guarantees instead is one build per pipeline run and
+the promotion of that build's digest (`constraints.md`, `ADR-007`'s
+amendment).
 
 ## Rule 7 — `.dockerignore` exists for both `backend/` and `frontend/`
 **MUST**: both directories have a `.dockerignore` excluding, at minimum,

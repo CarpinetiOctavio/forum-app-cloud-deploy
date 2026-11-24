@@ -1,54 +1,108 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 540" font-family="Helvetica, Arial, sans-serif">
-    <rect width="680" height="540" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 830" font-family="Helvetica, Arial, sans-serif">
+    <rect width="680" height="830" fill="#ffffff"/>
 
     <!-- Trigger -->
-    <rect x="270" y="40" width="140" height="44" rx="8" fill="#f3f4f6" stroke="#374151" stroke-width="1.5"/>
-    <text x="340" y="66" text-anchor="middle" font-size="14" font-weight="600" fill="#111827">Push / PR</text>
+    <rect x="230" y="24" width="220" height="48" rx="8" fill="#f3f4f6" stroke="#374151" stroke-width="1.5"/>
+    <text x="340" y="45" text-anchor="middle" font-size="14" font-weight="600" fill="#111827">Push / pull request</text>
+    <text x="340" y="62" text-anchor="middle" font-size="10.5" fill="#374151">feature/**, staging, main</text>
 
-    <line x1="316" y1="84" x2="200" y2="144" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <line x1="364" y1="84" x2="480" y2="144" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="300" y1="72" x2="200" y2="104" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="380" y1="72" x2="480" y2="104" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-    <!-- Tests -->
-    <rect x="70" y="144" width="260" height="56" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.5"/>
-    <text x="200" y="167" text-anchor="middle" font-size="14" font-weight="600" fill="#1e3a8a">Backend Tests (Go)</text>
-    <text x="200" y="187" text-anchor="middle" font-size="11" fill="#1d4ed8">go test + 70% gate</text>
+    <!-- Stages 1-4: inherited from qa-pipeline -->
+    <rect x="70" y="104" width="260" height="52" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.5"/>
+    <text x="200" y="126" text-anchor="middle" font-size="14" font-weight="600" fill="#1e3a8a">Backend Tests (Go)</text>
+    <text x="200" y="144" text-anchor="middle" font-size="11" fill="#1d4ed8">go test + 70% gate</text>
 
-    <rect x="350" y="144" width="260" height="56" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.5"/>
-    <text x="480" y="167" text-anchor="middle" font-size="14" font-weight="600" fill="#1e3a8a">Frontend Tests (React)</text>
-    <text x="480" y="187" text-anchor="middle" font-size="11" fill="#1d4ed8">jest + 70% gate</text>
+    <rect x="350" y="104" width="260" height="52" rx="8" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.5"/>
+    <text x="480" y="126" text-anchor="middle" font-size="14" font-weight="600" fill="#1e3a8a">Frontend Tests (React)</text>
+    <text x="480" y="144" text-anchor="middle" font-size="11" fill="#1d4ed8">jest + 70% gate</text>
 
-    <line x1="200" y1="200" x2="200" y2="260" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
-    <line x1="480" y1="200" x2="480" y2="260" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="200" y1="156" x2="200" y2="184" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="480" y1="156" x2="480" y2="184" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-    <!-- Parallel group container -->
-    <rect x="30" y="260" width="620" height="116" rx="12" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4 4"/>
-    <text x="46" y="282" font-size="11" fill="#4b5563">runs in parallel, after tests pass</text>
+    <rect x="30" y="184" width="620" height="108" rx="12" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4 4"/>
+    <text x="46" y="204" font-size="11" fill="#4b5563">Stages 1–4, from qa-pipeline: builds wait for their suite; SonarCloud and Cypress for both</text>
 
-    <rect x="46" y="300" width="135" height="56" rx="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
-    <text x="113" y="323" text-anchor="middle" font-size="13" font-weight="600" fill="#064e3b">Backend build</text>
-    <text x="113" y="341" text-anchor="middle" font-size="10.5" fill="#065f46">go build</text>
+    <rect x="46" y="218" width="135" height="56" rx="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+    <text x="113" y="241" text-anchor="middle" font-size="13" font-weight="600" fill="#064e3b">Backend build</text>
+    <text x="113" y="259" text-anchor="middle" font-size="10.5" fill="#065f46">go build</text>
 
-    <rect x="197" y="300" width="135" height="56" rx="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
-    <text x="264" y="323" text-anchor="middle" font-size="13" font-weight="600" fill="#064e3b">Frontend build</text>
-    <text x="264" y="341" text-anchor="middle" font-size="10.5" fill="#065f46">npm run build</text>
+    <rect x="197" y="218" width="135" height="56" rx="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+    <text x="264" y="241" text-anchor="middle" font-size="13" font-weight="600" fill="#064e3b">Frontend build</text>
+    <text x="264" y="259" text-anchor="middle" font-size="10.5" fill="#065f46">npm run build</text>
 
-    <rect x="348" y="300" width="135" height="56" rx="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
-    <text x="415" y="323" text-anchor="middle" font-size="13" font-weight="600" fill="#064e3b">SonarCloud</text>
-    <text x="415" y="341" text-anchor="middle" font-size="10.5" fill="#065f46">static analysis</text>
+    <rect x="348" y="218" width="135" height="56" rx="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+    <text x="415" y="238" text-anchor="middle" font-size="13" font-weight="600" fill="#064e3b">SonarCloud</text>
+    <text x="415" y="254" text-anchor="middle" font-size="10.5" fill="#065f46">static analysis</text>
+    <text x="415" y="268" text-anchor="middle" font-size="9.5" fill="#065f46">gate waited toward main</text>
 
-    <rect x="499" y="300" width="135" height="56" rx="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
-    <text x="566" y="323" text-anchor="middle" font-size="13" font-weight="600" fill="#064e3b">Cypress E2E</text>
-    <text x="566" y="341" text-anchor="middle" font-size="10.5" fill="#065f46">mocked + 1 real</text>
+    <rect x="499" y="218" width="135" height="56" rx="8" fill="#ecfdf5" stroke="#047857" stroke-width="1.5"/>
+    <text x="566" y="241" text-anchor="middle" font-size="13" font-weight="600" fill="#064e3b">Cypress E2E</text>
+    <text x="566" y="259" text-anchor="middle" font-size="10.5" fill="#065f46">19 mocked + 2 real</text>
 
-    <line x1="340" y1="376" x2="340" y2="416" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="340" y1="292" x2="340" y2="316" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-    <!-- Summary -->
-    <rect x="230" y="416" width="220" height="44" rx="8" fill="#f3f4f6" stroke="#374151" stroke-width="1.5"/>
-    <text x="340" y="442" text-anchor="middle" font-size="14" font-weight="600" fill="#111827">Test Summary</text>
+    <rect x="230" y="316" width="220" height="40" rx="8" fill="#f3f4f6" stroke="#374151" stroke-width="1.5"/>
+    <text x="340" y="341" text-anchor="middle" font-size="14" font-weight="600" fill="#111827">Test Summary</text>
+
+    <line x1="300" y1="356" x2="200" y2="398" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="380" y1="356" x2="480" y2="398" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- Stages 5-6: one build per run -->
+    <rect x="30" y="384" width="620" height="96" rx="12" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4 4"/>
+    <text x="46" y="471" font-size="11" fill="#4b5563">Stages 5–6, in parallel, once per run</text>
+
+    <rect x="70" y="402" width="260" height="58" rx="8" fill="#f5f3ff" stroke="#6d28d9" stroke-width="1.5"/>
+    <text x="200" y="424" text-anchor="middle" font-size="13" font-weight="600" fill="#4c1d95">Docker Build &amp; Push (Backend)</text>
+    <text x="200" y="442" text-anchor="middle" font-size="10.5" fill="#5b21b6">ghcr.io · tag: commit SHA · out: digest</text>
+
+    <rect x="350" y="402" width="260" height="58" rx="8" fill="#f5f3ff" stroke="#6d28d9" stroke-width="1.5"/>
+    <text x="480" y="424" text-anchor="middle" font-size="13" font-weight="600" fill="#4c1d95">Docker Build &amp; Push (Frontend)</text>
+    <text x="480" y="442" text-anchor="middle" font-size="10.5" fill="#5b21b6">ghcr.io · tag: commit SHA · out: digest</text>
+
+    <!-- Only a push to main deploys -->
+    <line x1="30" y1="500" x2="650" y2="500" stroke="#9ca3af" stroke-width="1" stroke-dasharray="6 4"/>
+    <text x="650" y="516" text-anchor="end" font-size="11" fill="#4b5563">only a push to main continues</text>
+
+    <line x1="300" y1="460" x2="260" y2="538" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <line x1="380" y1="460" x2="300" y2="538" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- Stages 7-9 in one concurrency group -->
+    <rect x="130" y="524" width="300" height="252" rx="12" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4 4"/>
+
+    <rect x="160" y="538" width="240" height="56" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+    <text x="280" y="561" text-anchor="middle" font-size="13" font-weight="600" fill="#7c2d12">7 · Deploy to QA (Render)</text>
+    <text x="280" y="579" text-anchor="middle" font-size="10.5" fill="#9a3412">deploy hook by digest + smoke test</text>
+
+    <line x1="280" y1="594" x2="280" y2="620" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <rect x="160" y="620" width="240" height="50" rx="8" fill="#fefce8" stroke="#a16207" stroke-width="1.5"/>
+    <text x="280" y="641" text-anchor="middle" font-size="13" font-weight="600" fill="#713f12">8 · Manual approval</text>
+    <text x="280" y="658" text-anchor="middle" font-size="10.5" fill="#854d0e">prod environment, required reviewer</text>
+
+    <line x1="280" y1="670" x2="280" y2="696" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <rect x="160" y="696" width="240" height="56" rx="8" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+    <text x="280" y="719" text-anchor="middle" font-size="13" font-weight="600" fill="#7c2d12">9 · Deploy to PROD (Render)</text>
+    <text x="280" y="737" text-anchor="middle" font-size="10.5" fill="#9a3412">same digests QA ran + smoke test</text>
+
+    <text x="280" y="770" text-anchor="middle" font-size="10" fill="#4b5563">concurrency group render-deploy: one deploy at a time</text>
+
+    <!-- Rollback -->
+    <rect x="470" y="538" width="180" height="84" rx="8" fill="#f3f4f6" stroke="#374151" stroke-width="1.5"/>
+    <text x="560" y="560" text-anchor="middle" font-size="14" font-weight="600" fill="#111827">Rollback</text>
+    <text x="560" y="578" text-anchor="middle" font-size="10.5" fill="#374151">rollback.yml, run by hand</text>
+    <text x="560" y="594" text-anchor="middle" font-size="10.5" fill="#374151">from main, two digests</text>
+    <text x="560" y="610" text-anchor="middle" font-size="10.5" fill="#374151">already deployed to PROD</text>
+
+    <line x1="470" y1="566" x2="404" y2="566" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="560" y="640" text-anchor="middle" font-size="10" fill="#4b5563">validated read-only, then the</text>
+    <text x="560" y="654" text-anchor="middle" font-size="10" fill="#4b5563">same QA → approval → PROD path</text>
 
     <!-- Cross-references -->
-    <text x="40" y="500" font-size="11" fill="#4b5563">trigger detail &#8594; ci-testing/branching-model.svg</text>
-    <text x="40" y="518" font-size="11" fill="#4b5563">adds SonarCloud + Cypress vs. ci-testing/ci-pipeline-flow.svg</text>
+    <text x="30" y="800" font-size="11" fill="#4b5563">trigger and stages &#8594; docs/rules/pipeline.md · one build trigger &#8594; ADR-009</text>
+    <text x="30" y="817" font-size="11" fill="#4b5563">deploy by digest &#8594; ADR-007 · rollback &#8594; docs/rules/deployment.md</text>
 
     <defs>
         <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">

@@ -57,8 +57,8 @@ document states as its own rule. This is what mechanically causes Stage 5–6
 to fire on `staging` pushes at all — the literal trigger for the whole
 problem this ADR resolves.
 
-Octavio's own prior implementation of this same application, submitted for
-this course's final assignment, never had this problem: a single pipeline
+The original implementation of this same application, submitted for this
+course's final assignment, never had this problem: a single pipeline
 run, triggered once code reached `main`, built one image, deployed it to
 QA, and — after manual approval — promoted that same image to PROD. This
 ADR's decision restores that model, informed by why the current repo's
@@ -77,10 +77,9 @@ longer exists once there is only ever one build per promotable release.
 Stages 1–6 are **unchanged** — they continue running on every push
 regardless of branch (`feature/**`, `staging`, `main`), per the existing
 Trigger section and matching `qa-pipeline@v1.0.0`'s own real precedent.
-Confirmed explicitly with Octavio: this is deliberate, not an oversight —
-fast feedback on every push, and by the time code reaches `main` it has
-already been validated twice (the `feature` push itself, and the
-`staging` push/PR). The images `feature/**` and `staging` pushes build are
+This is deliberate, not an oversight: fast feedback on every push, and by
+the time code reaches `main` it has already been validated twice (the
+`feature` push itself, and the `staging` push/PR). The images `feature/**` and `staging` pushes build are
 never referenced by any deploy stage; they accumulate unused in `ghcr.io`,
 an already-accepted cost (`ADR-003`'s Consequences section), not a new one
 introduced here.
@@ -88,10 +87,9 @@ introduced here.
 ## Rationale
 
 **This is not a new design choice — it is compliance with a rule this repo
-already committed to.** `constraints.md` predates this decision and
-already required build-once, promote-everywhere (Humble & Farley); this
-ADR corrects an implementation that had drifted from a constraint already
-in force, rather than introducing a new one.
+already committed to.** The `constraints.md` MUST quoted above predates
+this decision (build once, promote everywhere; Humble & Farley); this ADR
+corrects an implementation that had drifted from it.
 
 **The manual approval gate only means what it claims to mean if what's
 approved is what ships.** With two independently-built images, approving
@@ -138,8 +136,50 @@ never a second candidate image to reconcile against.
   wiring, port binding, container startup) are a distinct failure domain
   from code-level tests — one that Stage 7 continues to catch, just one
   merge later than before.
-- `HEAD^2` resolution, the two-parent guard, and any repo Settings change
-  to merge strategies are no longer required and are not implemented.
 - Rollback (`deployment.md`'s Rollback section) is unaffected — it already
   depended only on SHA tags never being overwritten (`docker.md` Rule 5),
   not on which stage triggered which deploy.
+
+## Amendment (2026-11-23): the quality gate on the path to `main`, and the rollback claim
+
+**What was wrong.** `docs/rules/constraints.md` forbids building or pushing
+an image unless every test and static-analysis gate already passed. The
+SonarCloud job never waited for the quality gate, so Stages 5–6 could build
+and push an image with the gate red, and on a push to `main` that image was
+then deployed, to QA and, after approval, to PROD. On the SonarCloud Free
+plan the rule could not hold on every branch either: there is a quality gate
+only for `main` and for pull requests into `main`, and this record keeps
+Stages 1–6 running on every push.
+
+**Decision.**
+- The scanner waits for the quality gate on a push to `main` and on a pull
+  request into `main`, and only there. This adopts the decision in force in
+  `qa-pipeline`
+  ([its `ADR-002` amendment of 2026-11-12](https://github.com/CarpinetiOctavio/forum-app-qa-pipeline/blob/v1.1.0/docs/decisions/ADR-002-sonarcloud.md#amendment-2026-11-12-the-quality-gate-now-blocks-on-the-path-to-main-within-the-free-plans-limits),
+  `v1.1.0`), with the same condition; the runs and the Free plan's limits
+  are recorded there.
+- `constraints.md`'s rule is adjusted to that path. On the path to `main`,
+  no image is built or pushed without the quality gate passing. On other
+  branches, images are built without it and are never deployed, either by
+  the pipeline or by rollback.
+- Stages 1–6 still run on every push, as decided above.
+
+**Why this is in scope.** Criterion (d) of `docs/rules/documentation.md`:
+that no image is deployed without passing every gate, and that on the path
+to `main` none is built without them either, is a guarantee this repository
+declares, and it was not true. This is not an
+exception to `constraints.md`'s boundary on the inherited quality stages:
+it adopts `qa-pipeline`'s own decision, not a change made here.
+
+**Consequences.**
+- A SonarCloud outage or a delay longer than the scanner's timeout fails
+  the job, and blocks merges into `main` and the deploy until it recovers.
+- Images built off the path to `main` are never deployed; rollback accepts
+  only digests already deployed from `main` (`docs/rules/deployment.md`,
+  Rollback).
+
+**Correction.** The last Consequence above says rollback "already depended
+only on SHA tags never being overwritten (`docker.md` Rule 5)". It did not
+hold: a rerun moves the tag (`ADR-007`'s amendment of 2026-11-11), so
+rollback goes by digest. Rule 5 also does not say that: it requires tagging
+every image with the commit SHA and forbids `latest` as an image's only tag.

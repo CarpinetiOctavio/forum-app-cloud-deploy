@@ -1,0 +1,144 @@
+name: Rollback
+
+# Redeploys a pair of image digests that already reached PROD from main:
+# QA first, then PROD after the same approval gate as the pipeline. Nothing
+# is built; the digests are validated read-only before any deploy hook is
+# called. See docs/rules/deployment.md (Rollback) and ADR-007's amendment
+# of 2026-11-23. Run it from main: the qa and prod environments accept only
+# main.
+
+on:
+  workflow_dispatch:
+    inputs:
+      backend_digest:
+        description: 'Backend image digest (sha256:...) already deployed to PROD from main'
+        required: true
+        type: string
+      frontend_digest:
+        description: 'Frontend image digest (sha256:...) already deployed to PROD from main'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  BACKEND_IMAGE: ghcr.io/carpinetioctavio/forum-app-cloud-deploy-backend
+  FRONTEND_IMAGE: ghcr.io/carpinetioctavio/forum-app-cloud-deploy-frontend
+
+jobs:
+  validate:
+    name: Validate rollback digests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: read
+      actions: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Require main
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Rollback runs only from main (the qa and prod environments accept only main)."
+          exit 1
+
+      - name: Validate backend digest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DIGEST: ${{ inputs.backend_digest }}
+        run: bash .github/scripts/validate-rollback-digest.sh "$BACKEND_IMAGE" "$DIGEST"
+
+      - name: Validate frontend digest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DIGEST: ${{ inputs.frontend_digest }}
+        run: bash .github/scripts/validate-rollback-digest.sh "$FRONTEND_IMAGE" "$DIGEST"
+
+  rollback-qa:
+    name: Roll back QA (Render)
+    runs-on: ubuntu-latest
+    needs: validate
+    environment: qa
+    concurrency:
+      group: render-deploy
+      cancel-in-progress: false
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Deploy backend to QA
+        id: deploy_backend
+        env:
+          DIGEST: ${{ inputs.backend_digest }}
+        run: |
+          URL=$(bash .github/scripts/deploy-render-service.sh \
+            "${{ secrets.RENDER_DEPLOY_HOOK_BACKEND_QA }}" \
+            "${BACKEND_IMAGE}@${DIGEST}" \
+            "${{ secrets.RENDER_API_KEY }}")
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy frontend to QA
+        id: deploy_frontend
+        env:
+          DIGEST: ${{ inputs.frontend_digest }}
+        run: |
+          URL=$(bash .github/scripts/deploy-render-service.sh \
+            "${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND_QA }}" \
+            "${FRONTEND_IMAGE}@${DIGEST}" \
+            "${{ secrets.RENDER_API_KEY }}")
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test QA backend
+        run: bash .github/scripts/smoke-test.sh "${{ steps.deploy_backend.outputs.url }}/api/posts" json
+
+      - name: Smoke test QA frontend
+        run: bash .github/scripts/smoke-test.sh "${{ steps.deploy_frontend.outputs.url }}" frontend "${{ steps.deploy_backend.outputs.url }}"
+
+  rollback-prod:
+    name: Roll back PROD (Render)
+    runs-on: ubuntu-latest
+    needs: rollback-qa
+    environment: prod
+    concurrency:
+      group: render-deploy
+      cancel-in-progress: false
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Deploy backend to PROD
+        id: deploy_backend
+        env:
+          DIGEST: ${{ inputs.backend_digest }}
+        run: |
+          URL=$(bash .github/scripts/deploy-render-service.sh \
+            "${{ secrets.RENDER_DEPLOY_HOOK_BACKEND_PROD }}" \
+            "${BACKEND_IMAGE}@${DIGEST}" \
+            "${{ secrets.RENDER_API_KEY }}")
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy frontend to PROD
+        id: deploy_frontend
+        env:
+          DIGEST: ${{ inputs.frontend_digest }}
+        run: |
+          URL=$(bash .github/scripts/deploy-render-service.sh \
+            "${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND_PROD }}" \
+            "${FRONTEND_IMAGE}@${DIGEST}" \
+            "${{ secrets.RENDER_API_KEY }}")
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test PROD backend
+        run: bash .github/scripts/smoke-test.sh "${{ steps.deploy_backend.outputs.url }}/api/posts" json
+
+      - name: Smoke test PROD frontend
+        run: bash .github/scripts/smoke-test.sh "${{ steps.deploy_frontend.outputs.url }}" frontend "${{ steps.deploy_backend.outputs.url }}"

@@ -34,25 +34,16 @@ Factor III (*"Store config in the environment... strictly separated from
 code"*) — the current code fails that factor outright, independent of
 where the file happens to live on disk.
 
-**This is not a conceptual error to attribute to `qa-pipeline` or
-`ci-testing` — it is the correct, natural consequence of neither repo ever
-needing this.** `ci-testing` never deploys the application anywhere; its
-tests run against mocked repositories or a locally started process.
-`qa-pipeline` does run the real backend, but only ever in one context: a
-single CI job, on `localhost`, for the duration of the Cypress suite
-(`docs/rules/pipeline.md`'s inherited Stage 4) — there was never a second,
-independently reachable environment in either repo's lifecycle for a
-configurable path to distinguish between. Hardcoding `./database.db` was
-the right amount of complexity for that scope, not a shortcut around a
-requirement that already existed. The requirement is new here, introduced
-by this repository's own scope — two named, independently reachable
-environments — not a pre-existing gap this repository discovered. The
-practical consequence for how the fix gets made: it has to be done as new,
-first configurability for this codebase, not as a repair of something that
-regressed — no assumption from `-legacy`'s equivalent code carries over,
-and the fallback default must remain the same non-sensitive value
-(`./database.db`) local development already relies on, with no credential
-or environment-specific detail hardcoded in its place.
+**This is not a defect to attribute to `qa-pipeline` or `ci-testing`.**
+Neither repo ever had two independently reachable environments for a
+configurable path to distinguish: `ci-testing` never deploys the
+application, and `qa-pipeline` runs the real backend only in one CI job, on
+`localhost`, for the Cypress suite (`docs/rules/pipeline.md`'s inherited
+Stage 4). The requirement is introduced by this repository's scope, so the
+fix is new configurability, not a repair: no assumption from `-legacy`'s
+equivalent code carries over, and the fallback default stays the
+non-sensitive `./database.db` that local development already relies on,
+with no credential or environment-specific detail hardcoded in its place.
 
 ## Decision
 
@@ -75,20 +66,14 @@ db, err := database.InitDB(dbPath)
 ## Rationale
 
 **Why the configurability fix is in scope despite `docs/rules/constraints.md`'s
-restriction on touching `internal/services/`:** the change above is to
-`cmd/api/main.go`, the composition root — not to `internal/services/`, not
-to any business rule, not to what the application does. It is exactly the
-"environment-specific configuration injected at runtime" requirement
-`docs/rules/docker.md` Rule 1 and `docs/rules/constraints.md` already state
-as non-negotiable for this repository's own scope — containerizing and
-deploying an app that hardcodes its own storage path is not actually
-possible to do correctly, since "one image, environment-agnostic, runtime
-config only" (this repo's central guarantee) cannot be true of a binary
-that ignores its environment by construction. This is not a business-logic
-change; it is the minimum wiring necessary for this repository's stated
-purpose to be achievable at all, which is precisely the "condition for this
-repository's own declared guarantees to be real" exceeds-scope criterion
-`docs/rules/documentation.md` and `CLAUDE.md` already define — the same
+restriction on touching `internal/services/`:** the change is to
+`cmd/api/main.go`, the composition root, not to `internal/services/`, a
+business rule, or what the application does. "One image,
+environment-agnostic, runtime config only" (`docs/rules/docker.md` Rule 1
+and `docs/rules/constraints.md`) cannot be true of a binary that ignores its
+environment by construction. The fix is therefore a condition for this
+repository's own declared guarantees to be real — the exceeds-scope
+criterion `docs/rules/documentation.md` and `CLAUDE.md` define, and the same
 class of justification `ADR-001` used to accept real authentication as
 in-scope.
 
@@ -127,16 +112,15 @@ justified conclusions.
 
 | Alternative | Reason not chosen |
 |---|---|
-| Render Disk (persistent volume) | Solves the problem correctly, but is a paid feature ($0.25/GB/month minimum) — incompatible with this project's zero-budget constraint. The escape hatch above (`DATABASE_PATH` now genuinely configurable) means adopting this later, on a paid plan, requires zero code change — only a Render configuration change. |
+| Render Disk (persistent volume) | Solves the problem correctly, but is a paid feature ($0.25/GB/month minimum) — incompatible with this project's zero-budget constraint. Adopting it later needs no code change (see Consequences). |
 | Migrate to hosted PostgreSQL | The architecturally correct answer for a real production workload — but requires rewriting `internal/repository/`'s SQL and `go-sqlite3`'s CGO dependency, which is `qa-pipeline`'s owned code surface per `docs/rules/constraints.md`, not this repository's to modify as a side effect of containerization. |
 | Seed the database from a fixture file on every startup | Addresses the *appearance* of an empty-state problem, not the actual data-loss problem — a user's real registration or post is still lost on redeploy either way. Doesn't solve what ephemeral storage actually costs. |
 | Leave `main.go`'s path hardcoded, accept ephemeral storage as-is | Rejected as internally inconsistent: this repository's own `docs/rules/docker.md` Rule 1 and `constraints.md` already forbid baking environment-specific values into the running artifact. Accepting ephemeral storage without fixing the hardcoded path would mean this repo's own stated rules are violated by the code it ships, silently. |
 
 ## Consequences
 
-- `cmd/api/main.go` reads `DATABASE_PATH` from the environment, falling
-  back to `./database.db` when unset — every existing local-dev and CI
-  workflow that never set this variable continues to work unchanged.
+- Every local-dev and CI workflow that never set `DATABASE_PATH` keeps
+  working unchanged, through the fallback.
 - Data written by users (registrations, posts, comments) does not survive
   a redeploy on either QA or PROD, on the free tier, by design — documented
   here as a deliberate, cost-driven trade-off, not an oversight.

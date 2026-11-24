@@ -113,17 +113,13 @@ reads its config from `/tmp/conf.d/` instead, per the build-time
 ## Rationale
 
 **Why explicit reads, not trusting auto-detection, for both containers.**
-Render's own documented risk ("usually", "if detection fails, deploy
-fails") is exactly the kind of implicit, best-effort behavior
-`docs/rules/docker.md` Rule 1 and `ADR-005`/`ADR-006` already reject in
-other forms — the difference between "the platform's guess about my
-container happens to be right" and "my container declares what it needs
-and gets it" is the same distinction that motivated reading
-`DATABASE_PATH` and `REACT_APP_API_URL` from the environment instead of
-hardcoding them. `8080` is kept as the fallback for both — not Render's
-own `10000` default — to match this repo's existing convention
-(`EXPOSE 8080` in both Dockerfiles, the backend's prior hardcoded value),
-so local development and any script assuming `8080` is unaffected.
+A container that declares what it needs, instead of depending on the
+platform's guess about it, is the same distinction that motivated reading
+`DATABASE_PATH` and `REACT_APP_API_URL` from the environment (see Context).
+`8080` is kept as the fallback for both — not Render's own `10000` default —
+to match this repo's existing convention (`EXPOSE 8080` in both
+Dockerfiles, the backend's prior hardcoded value), so local development and
+any script assuming `8080` is unaffected.
 
 **Why the frontend fix copies the whole `conf.d/` directory, not just
 `default.conf`.** `docs/rules/deployment.md`'s own environment-variable
@@ -149,32 +145,25 @@ same check `ADR-006`'s amendment used for `/usr/share/nginx/html`.
 
 | Alternative | Reason not chosen |
 |---|---|
-| Trust Render's auto-detection, change nothing | Rejected: Render's own documentation describes this as a best-effort fallback with a real, named failure mode ("if Render fails to detect... deploy fails"), not a guarantee — leaving it unaddressed means this repo's declared "one image, both environments" guarantee depends on a platform behavior outside this repo's control, the same category of risk `ADR-005`/`ADR-006` already closed elsewhere. |
+| Trust Render's auto-detection, change nothing | Rejected: a best-effort fallback with a documented failure mode, on which the "one image, both environments" guarantee would depend (see Context). |
 | `sed` the port directly into `/etc/nginx/conf.d/default.conf` at container start (the original, untested proposal) | Rejected once verified failing: the file is root-owned, the container runs as non-root `nginx`, and `sed -i` cannot create its temp file there — confirmed with a real `Permission denied`, not assumed. |
 | Give the `nginx` user write access to `/etc/nginx/conf.d/` via `--chown` or a runtime `chown` | Rejected: this is exactly the pattern `docker:S6504` and `ADR-006`'s amendment already rejected for `/usr/share/nginx/html` — the runtime user would be able to modify nginx's own routing configuration, a larger blast radius than the served static files it was originally scoped to. |
 | Copy only `default.conf` to `/tmp/conf.d/`, not the whole directory | Rejected: works for the image's current contents, but silently stops covering any additional `.conf` file a future base-image version might ship in the same directory, with no error to surface the gap. |
 
 ## Consequences
 
-- `backend/cmd/api/main.go` reads `PORT` from the environment, falling
-  back to `8080` — every existing local-dev and CI workflow that never
-  set this variable continues to work unchanged. Verified: `go build
-  ./...` exits 0; `go test ./tests/services/... -cover
-  -coverpkg=./internal/services/...` still 50/50 passing, 88.2% coverage,
-  unchanged.
-- `frontend/Dockerfile`'s build-time port `sed` is removed; `nginx.conf`'s
-  `include` path is repointed at `/tmp/conf.d/*.conf` at build time
-  instead. `frontend/docker-entrypoint.sh` gains the runtime copy-and-
-  substitute step for the whole `conf.d/` directory.
+- Every local-dev and CI workflow that never set `PORT` keeps working
+  through the `8080` fallback. Verified: `go build ./...` exits 0; `go test
+  ./tests/services/... -cover -coverpkg=./internal/services/...` still
+  50/50 passing, 88.2% coverage, unchanged.
+- `frontend/Dockerfile`'s build-time port `sed` is removed.
 - `PORT` must be set per Render service (or left unset, falling back to
   `8080`) — `docs/rules/deployment.md`'s environment-variable list is
   updated to include it for both services, alongside `DATABASE_PATH` and
   `REACT_APP_API_URL`.
-- Verified end-to-end against the real, rebuilt frontend image, not just
-  reasoned about: running with `PORT=9095` set, the original
-  `/etc/nginx/conf.d/default.conf` and `nginx.conf` stay root-owned and
-  unmodified, the runtime copy in `/tmp/conf.d/default.conf` carries the
-  substituted port, `touch` against the original directory still fails
-  with `Permission denied`, and the container actually serves HTTP `200`
-  on the configured port — combined with `REACT_APP_API_URL`'s own
-  substitution still working correctly in the same run.
+- Verified end-to-end against the rebuilt frontend image, with `PORT=9095`:
+  the original `/etc/nginx/conf.d/default.conf` and `nginx.conf` stay
+  root-owned and unmodified, the runtime copy in `/tmp/conf.d/default.conf`
+  carries the substituted port, and the container serves HTTP `200` on that
+  port, with `REACT_APP_API_URL`'s substitution still working in the same
+  run. The `Permission denied` check is the one described in the Rationale.

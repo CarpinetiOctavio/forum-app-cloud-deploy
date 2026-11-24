@@ -6,17 +6,13 @@
 ## Context
 
 `docs/rules/pipeline.md` left this decision explicitly open since it was
-first written: `cloud-deploy-legacy` documented a Render **deploy hook**
-mechanism in four separate files (its own `ADR-002-hosting.md`,
-`deployment.md`, `pipeline.md`, `constraints.md` — unrelated to, and
-predating, this repository's own differently-numbered `ADR-002`, about the
-container registry) and actually implemented a different one — the **Render
-REST API**, authenticated with an account-scoped `RENDER_API_KEY` — without
-ever reconciling the two (`cloud-deploy-legacy-audit-results.md` §4). This
-repository does not inherit either choice by default; per
-`docs/rules/documentation.md`'s "documentation follows implementation"
-rule, the decision is made once, deliberately, before either mechanism is
-implemented — not asserted from what `-legacy` happened to run.
+first written. `cloud-deploy-legacy` documented a Render **deploy hook** and
+implemented the **Render REST API**, authenticated with an account-scoped
+`RENDER_API_KEY`, without reconciling the two (`ADR-000`;
+`cloud-deploy-legacy-audit-results.md` §4). This repository does not inherit
+either choice by default: per `docs/rules/documentation.md`'s "documentation
+follows implementation" rule, the decision is made once, deliberately,
+before either mechanism is implemented.
 
 **Why the mechanism matters beyond "which HTTP call to make":** `ADR-003`'s
 commit-SHA tagging strategy is not just an auditability preference. Its real
@@ -128,9 +124,9 @@ as a convenience trade worth taking for its own sake.
 
 | Alternative | Reason not chosen |
 |---|---|
-| Render API for both triggering and status (what `-legacy` actually ran) | Rejected once the functional gap motivating it (belief that hooks couldn't target a specific tag) was checked and found false — with equivalent functionality, there's no longer a reason to accept the larger blast radius. |
+| Render API for both triggering and status (what `-legacy` actually ran) | The gap that motivated it does not exist (finding 1); with equivalent functionality, the larger blast radius has no reason (see Rationale). |
 | Deploy hooks only, no status polling, smoke test fires on a fixed delay after the trigger call | Rejected: a fixed delay is either too short (smoke test runs against the still-terminating old container, per Render's zero-downtime swap) or wastefully long — real status polling, from finding 3, is available for the cost of one read-only credential already required for exactly this purpose. |
-| A service-scoped or read-only Render API key | Does not exist — confirmed against two current, independent sources (finding 2). Not a real option to weigh, not a gap in this analysis. |
+| A service-scoped or read-only Render API key | Does not exist (finding 2). |
 | Store the deploy hook URLs unauthenticated as build-time constants rather than GitHub Secrets | Rejected without extended consideration: `docs/rules/constraints.md` already treats every Render credential, hook URLs included, as a value that must be a GitHub Secret — a hook URL is a bearer credential (anyone with it can trigger a deploy) regardless of its narrower blast radius relative to an API key. |
 
 ## Consequences
@@ -139,13 +135,9 @@ as a convenience trade worth taking for its own sake.
   mechanism as a requirement, replacing the two-option list it held while
   this decision was open.
 - `docs/rules/deployment.md`'s Secrets section is rewritten to name the
-  real secrets this decision requires: `RENDER_DEPLOY_HOOK_{BACKEND,FRONTEND}_{QA,PROD}`
-  (four, one per service, each a bearer URL) and `RENDER_API_KEY` (one,
-  repository-level, used only for the read-only status call) — not the
-  `RENDER_DEPLOY_HOOK_QA`/`RENDER_DEPLOY_HOOK_PROD` two-secret shape
-  `-legacy`'s documentation (never its implementation) described, and not
-  the `RENDER_SERVICE_ID_*` four-secret shape `-legacy` actually used
-  instead.
+  real secrets this decision requires: four hook URLs, one per service, and
+  one repository-level `RENDER_API_KEY` for the read-only status call —
+  neither of the shapes `-legacy` documented or used.
 - Every deploy call MUST include `imgURL`/`imageUrl` set to this pipeline
   run's exact commit SHA — omitting it would silently fall back to
   whatever tag the service last had configured, defeating `ADR-003`'s
@@ -153,11 +145,9 @@ as a convenience trade worth taking for its own sake.
 - The pipeline MUST branch on a hook response containing `202` with no
   deploy ID (finding 4) — treated as "a deploy is already in progress,"
   not as a failure, with a retry/backoff rather than an immediate error.
-- `RENDER_API_KEY`'s code paths are restricted to `GET` calls by this
-  pipeline's own implementation, not by anything Render enforces — any
-  future change that adds a write call using this same secret must be
-  treated as reopening this ADR's blast-radius analysis, not as a minor
-  extension.
+- Any future change that adds a write call with `RENDER_API_KEY` reopens
+  this ADR's blast-radius analysis; the `GET`-only restriction is enforced
+  by this pipeline's code, not by Render (see Rationale).
 
 ## Amendment (2026-11-11): deploys target the image digest, not the tag
 
@@ -185,3 +175,52 @@ own amendment.
 **Correction.** `RENDER_API_KEY` is used only for read-only `GET` calls:
 the deploy status this ADR describes, and the service lookup that resolves
 the public URL the smoke test needs — not for the status call alone.
+
+## Amendment (2026-11-23): rollback through the same mechanism
+
+**What changes.** Rollback is a separate workflow,
+`.github/workflows/rollback.yml`, run by hand from `main`. It takes the
+backend and frontend digests to return to and redeploys them with this
+ADR's mechanism: the same hooks and the same read-only status calls, QA
+first, then PROD behind the same approval. Nothing is rebuilt. The steps
+are in `docs/rules/deployment.md`, Rollback.
+
+**Which digests are accepted.** Only digests already deployed to PROD from
+`main`. Before any hook is called, a read-only check confirms that the
+image exists in ghcr.io, that its commit-SHA tag currently points to that
+digest, and that the commit has a successful deployment from `main` in the
+`prod` environment, as the GitHub Deployments API records it, created by a
+run of `ci.yml`.
+
+**Limits.**
+- *The check compares against the current tag.* The Deployments API
+  records the commit, not the digest, and a rerun can produce another
+  digest for the same commit and move the tag to it (`ADR-003`'s amendment
+  of 2026-11-23). So the check fails in both directions: it rejects a
+  digest that was in PROD if a rerun later moved its tag, and it accepts a
+  digest from a rerun that never reached PROD if its commit did. It proves
+  that the commit reached PROD, not that this exact digest did. No
+  infrastructure is added to record digests per deployment.
+- *A rollback's deployments record the commit of `main` at the time of the
+  run,* not the commit of the image it deploys; the deploy logs record the
+  digest. Counted, they would let a commit pass the check without ever
+  having reached PROD (a rollback run while `main` is at a commit whose own
+  PROD deploy was never approved). The check therefore counts only
+  deployments whose successful status links to a run of `ci.yml`.
+- *One deploy at a time.* The deploy jobs of the pipeline and of the
+  rollback share one concurrency group (`render-deploy`,
+  `cancel-in-progress: false`): the running job is never cancelled, but a
+  newer pending job replaces an older pending one (GitHub's default), so a
+  pending deploy, PROD included, can be cancelled by a newer one; the
+  cancellation is visible in its run. Whether a job waiting for PROD
+  approval holds the group is not documented by GitHub.
+- *A rollback is a deploy:* it replaces the container, so the database
+  starts empty (`ADR-005`).
+
+**Alternatives rejected.**
+- *Render's dashboard rollback.* It skips the approval gate for PROD and
+  leaves no record of the digest in this repository's runs.
+- *Re-running the deploy jobs of an old run.* GitHub allows a re-run only
+  up to 30 days after the initial run ("Re-running workflows and jobs",
+  consulted 2026-11-23), so it cannot reach an older release; a re-run of
+  the whole run also rebuilds the images and moves their tags.

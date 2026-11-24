@@ -60,34 +60,23 @@ separate build invocations having somehow produced the same output.
 
 ## Why `latest` specifically is excluded, not just discouraged
 
-`latest` is not a version — it is a pointer that every subsequent push
-silently reassigns. Three concrete failures follow directly from that
-property, not from any implementation detail of this pipeline:
+`latest` is not a version: it is a pointer that every push reassigns, so it
+fails each property above. It does not say which commit is running;
+redeploying "the version from before" requires knowing that version's
+identity from some other source; and if QA and PROD pull `latest` at
+different times, they can run different images while both report
+"running latest".
 
-1. **No way to know what's running.** A container tagged `latest` carries no
-   information about which commit produced it; that information exists only
-   in whichever build happened to run last, external to the tag itself.
-2. **Rollback requires external memory.** Redeploying "the version from
-   before" requires already knowing, from some other source, what that
-   version's real identity was — `latest` cannot answer that question about
-   itself.
-3. **Concurrent environments can silently diverge.** If QA and PROD each
-   pull `latest` independently, at different times, they can end up running
-   different images while both correctly report "running latest" — the tag
-   actively hides the divergence rather than surfacing it.
-
-A direct correction was already given during this series' own academic
-review, on `forum-app-qa-pipeline`, where `latest` appeared in a deploy
-configuration and was flagged. This decision is this repository's own
-independent grounding for the same conclusion, not a restatement of that
-correction — the reasoning above holds regardless of whether it had been
-raised before.
+The same conclusion was given as a correction during this series' academic
+review of `forum-app-qa-pipeline`, where `latest` appeared in a deploy
+configuration. The reasoning above is this repository's own grounding and
+holds regardless of that correction.
 
 ## Alternatives considered and rejected
 
 | Alternative | Reason not chosen |
 |---|---|
-| `latest` only | Mutable by construction — fails all three properties above. Excluded by the assignment's own requirement, and independently unsound per the reasoning above. |
+| `latest` only | Mutable by construction (see above), and excluded by the assignment. |
 | Semantic versioning (`v1.2.3`) | Requires a human or a tool to decide, for every commit, whether it's a major/minor/patch change — overhead with no corresponding benefit when every commit to `main` that passes the pipeline is, by this project's own design, a deployable unit. Semver communicates compatibility intent to external consumers of a published artifact; this image has exactly one internal consumer (Render, via this same pipeline), so that signal has no audience. |
 | Branch name + SHA (`main-a3f9c2b`) | The SHA alone is already globally unique and sufficient for lookup; prefixing it with the branch adds a second piece of state that can drift from the truth (a commit can exist on more than one branch) without adding any real disambiguation. |
 | Sequential build number | Monotonic and simple, but not self-describing — recovering "which commit is build #482" requires consulting the CI system's own external run history, reintroducing exactly the external-memory dependency `latest` has and a SHA does not. |
@@ -112,3 +101,31 @@ raised before.
 The deploy step and Render configuration now reference images by digest
 (see `ADR-007`'s amendment); the SHA tag is still published for
 traceability.
+
+## Amendment (2026-11-23): what the SHA tag guarantees and what it does not
+
+Four statements above do not hold:
+
+- **The tag can move.** The Rationale says no operation in normal pipeline
+  use repoints a SHA tag. Re-running a run builds the image again for the
+  same commit and pushes it under the same tag; builds are not reproducible
+  (`docs/rules/docker.md` Rule 6), so the tag moves to a different digest
+  (`ADR-007`'s amendment of 2026-11-11). A digest cannot move.
+- **Rollback and environment parity go by digest, not by tag.** "Rollback
+  becomes a lookup" and "Environment parity becomes checkable" rely on the
+  tag naming one set of bytes. Because it can move, deploys pass the digest
+  (`ADR-007`'s amendment) and rollback takes digests
+  (`docs/rules/deployment.md`, Rollback).
+- **The deploy mechanism is not open.** The Consequences call it "still
+  open"; `ADR-007` decided it.
+- **Pull request runs tag a merge commit that no branch contains.** On a
+  `pull_request` event, `github.sha` is the commit GitHub creates to test
+  the merge of the pull request into its base. Run `43341192421` (a pull
+  request from `staging`) pushed its images under `df55240`, "Merge 15e525b
+  into 7ee46bf", which is on no branch. Those images trace to a test merge,
+  not to a commit in the history, and are never deployed: only a push to
+  `main` deploys (`ADR-009`).
+
+The decision is unchanged: every image is tagged with `${{ github.sha }}`,
+never `latest`. The tag traces an image to the commit that produced it; the
+digest identifies what is deployed.

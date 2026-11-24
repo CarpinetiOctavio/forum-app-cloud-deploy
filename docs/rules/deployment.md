@@ -1,5 +1,7 @@
 # Operating rules — Deployment (forum-app-cloud-deploy)
 
+> **Agent instructions.** This file is operating context for an AI assistant working in this repository, not project documentation. Decisions and their reasons are in [`docs/decisions/`](../decisions/).
+
 ## Purpose and authority
 This file states how Render itself is configured and how this repo reasons
 about promoting an artifact through it. Read `docs/rules/constraints.md`
@@ -115,17 +117,35 @@ image digest referenced by the PROD deploy, for the same pipeline run,
 MUST be identical — checkable directly against the deploy mechanism's own
 logs, not assumed from the fact that both stages "succeeded."
 
-## Rollback — principle now, exact steps once the mechanism is decided
-**MUST**: be able to redeploy a previous known-good commit-SHA tag without
-rebuilding anything. This is only possible because every image is tagged
-with its commit SHA and never overwritten (`docker.md` Rule 5) — rollback
-is a consequence of that rule, not a separate feature bolted on.
+## Rollback
+**MUST**: roll back by redeploying a pair of image digests (backend and
+frontend) that already reached PROD from `main`, without rebuilding
+anything, through `.github/workflows/rollback.yml`. **MUST NOT**: roll back
+by tag.
+- Why by digest: a rerun moves a commit-SHA tag to a new digest
+  (`ADR-003`'s amendment of 2026-11-23); a digest names one image.
+- Why only digests that reached PROD from `main`: images built off the
+  path to `main` never passed the quality gate and are never deployed
+  (`constraints.md`, `ADR-009`'s amendment of 2026-11-23).
 
-The exact rollback steps (which dashboard action, which API call) depend on
-the mechanism decided in `pipeline.md` — written here once that decision
-exists, not guessed at now the way `-legacy`'s rollback section ended up
-being the one file that accidentally matched its real mechanism while
-three others didn't.
+**Steps:**
+1. Find the two digests to return to: the deploy logs of the pipeline run
+   that last deployed them print each image as `…@sha256:…`.
+2. Run the **Rollback** workflow from `main` (Actions → Rollback → Run
+   workflow) with both digests.
+3. The `validate` job checks each digest, read-only, before any deploy
+   hook is called: the form `sha256:<64 hex>`, that the image exists in
+   ghcr.io, that the commit-SHA tag of that image currently points to it,
+   and that this commit has a successful deployment from `main` in `prod`
+   created by a run of `ci.yml` (GitHub Deployments API; deployments
+   created by `rollback.yml` do not count).
+4. QA is redeployed and smoke-tested, then PROD waits for the same
+   approval as the pipeline, and is redeployed and smoke-tested.
+
+**Limits** (what the check proves, what a rollback's deployments record,
+the shared concurrency group, the empty database): `ADR-007`'s amendment
+of 2026-11-23. **MUST NOT** state more than that amendment does about what
+a rollback guarantees.
 
 ## QA vs. PROD — what's allowed to differ, what's never allowed to differ
 **Allowed to differ**: runtime environment variables, resource allocation

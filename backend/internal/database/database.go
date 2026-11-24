@@ -9,8 +9,10 @@ import (
 
 // InitDB initializes the SQLite database
 func InitDB(filepath string) (*sql.DB, error) {
-	// Open connection to SQLite
-	db, err := sql.Open("sqlite3", filepath)
+	// Open connection to SQLite. SQLite enforces foreign keys only on
+	// connections that enable them; the driver applies _foreign_keys to
+	// every connection it opens, which a one-off PRAGMA would not. ADR-011.
+	db, err := sql.Open("sqlite3", filepath+"?_foreign_keys=1")
 	if err != nil {
 		return nil, err
 	}

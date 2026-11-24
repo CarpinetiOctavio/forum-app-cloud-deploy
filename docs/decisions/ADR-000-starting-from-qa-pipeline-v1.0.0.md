@@ -22,64 +22,43 @@ compiled into `cloud-deploy-legacy-audit-results.md` and
 that `-legacy`'s apparent maturity does not extend to its code lineage or to
 several of its documents:
 
-- **`-legacy`'s backend does not descend from `qa-pipeline@v1.0.0`**, despite
-  its own `constraints.md` and `testing.md` both stating it does, in matching
-  wording. Diffed directly against real tagged snapshots of all three prior
-  repos: `-legacy`'s business logic is the closest sibling of `ci-testing`'s
-  **pre-hardening** `v1.0.0` state (43 non-comment lines of difference — a
-  module path and a constants refactor, nothing behavioral) — not
-  `qa-pipeline@v1.0.0` (181 lines of difference, almost entirely
-  `EditPost`/`EditComment`, absent from `-legacy` entirely) and not
-  `ci-testing@v1.1.0` (71 lines of difference on `auth_service.go` alone,
-  from the hardening pass `-legacy` never received: no `bcrypt`, no
-  `http.MaxBytesReader`, 9 confirmed raw `err.Error()` responses sent to the
-  client). `-legacy`'s own git history opens on 2026-06-24 with a single
-  commit importing an entire pre-existing `tp06-testing`-named project
-  wholesale — the real prior development happened outside that repo's git
-  history entirely.
-- **The spoofable-authentication design this predates is not hypothetical —
-  it was confirmed exploitable against `-legacy`'s real, live, deployed QA
-  service**, independently, twice: once by Claude (the `DeleteComment` case,
-  the specific finding this entire audit chain traces back to, originating
-  in `qa-pipeline-legacy`'s own audit) and once by Octavio himself,
-  reproducing the `DeletePost` case by hand against the same live backend.
-  Both confirmed that a request presenting no credential beyond a
+- **`-legacy`'s backend does not descend from `qa-pipeline@v1.0.0`**, although
+  its own `constraints.md` and `testing.md` say it does. Diffed against the
+  tagged snapshots of the three prior repos, its business logic is closest to
+  `ci-testing`'s pre-hardening `v1.0.0`: it lacks `qa-pipeline`'s
+  `EditPost`/`EditComment` and `ci-testing@v1.1.0`'s hardening (`bcrypt`,
+  `http.MaxBytesReader`, raw `err.Error()` responses sent to the client). Its
+  git history opens with a single commit importing a pre-existing project, so
+  the real prior development is outside that history. The diff sizes and the
+  import commit are in `cloud-deploy-legacy-audit-results.md`.
+- **The spoofable-authentication design this predates is not hypothetical:**
+  it was confirmed exploitable against `-legacy`'s live, deployed QA service,
+  independently, twice (the `DeleteComment` case, which this audit chain traces
+  back to `qa-pipeline-legacy`'s own audit, and the `DeletePost` case,
+  reproduced by hand). A request presenting no credential beyond a
   client-supplied `X-User-ID` header can delete another account's content.
 - **Several of `-legacy`'s documents describe a plan that was never
-  reconciled with what was actually implemented.** Four separate files
-  (`-legacy`'s own `ADR-002-hosting.md`, `docs/rules/deployment.md`,
-  `docs/rules/pipeline.md`, `docs/rules/constraints.md`) describe deploying
-  via a Render deploy hook; the real, implemented mechanism is the Render
-  REST API authenticated with an account-scoped `RENDER_API_KEY` — only
-  `SETUP.md` and `COMMANDS.md` were ever updated to match. `-legacy`'s
-  `ADR-002-hosting.md` separately understates the real service count
-  (states two, the real setup needs four; this repository's own,
-  differently-numbered `ADR-002` is about the container registry, an
-  unrelated topic — see `ADR-002-container-registry.md`). The README's
-  "Issues Resolved: 47" claim is boilerplate copied from
-  `qa-pipeline-legacy`'s own README template, never a number computed
-  against `-legacy`'s actual SonarCloud project — confirmed by exhausting
-  every angle of SonarCloud's API: this project has never recorded more
-  than 31 issues total, 6 ever resolved. The pipeline auto-deploys to QA on
-  a push to `develop` or `master`, not only `main`, undocumented. A GitHub
-  environment-review approval left unactioned expires silently after
-  exactly 30 days, also undocumented, and was the actual explanation for a
-  run that looked like an unexplained deploy failure.
+  reconciled with what was implemented.** Four files (`ADR-002-hosting.md`,
+  `deployment.md`, `pipeline.md`, `constraints.md`) describe deploying via a
+  Render deploy hook, while the implemented mechanism is the Render REST API
+  with an account-scoped `RENDER_API_KEY`, and only `SETUP.md` and
+  `COMMANDS.md` were updated to match; `-legacy`'s `ADR-002-hosting.md`
+  understates the service count (two stated, four needed; this repository's
+  own `ADR-002` is about the container registry, an unrelated topic); the
+  README's "Issues Resolved: 47" is boilerplate, not a SonarCloud figure; QA
+  also auto-deploys from `develop` and `master`, undocumented; and an
+  unactioned environment approval expires silently after 30 days, also
+  undocumented. The evidence for each is in `cloud-deploy-legacy-audit-results.md`.
 - **Not everything found was a defect.** `-legacy`'s `ADR-005`
   (SQLite persistence) and `ADR-006` (frontend runtime config) are solid,
   independently-reasoned decisions, not just restatements of the course's
   own "100%-free" reference architecture example (which `-legacy`'s registry
-  and hosting choices otherwise track closely). Several real,
-  non-code-specific platform gotchas were found and are worth keeping
-  regardless of this decision: the arm64/amd64 mismatch when pushing from
-  Apple Silicon, the two-part `GITHUB_TOKEN`/ghcr.io permission requirement,
-  the two-part non-root-Docker-user fix (a SonarCloud rule, then a
-  `WORKDIR`-ownership runtime failure it doesn't catch), `go-sqlite3`'s CGO
-  requirement ruling out a `scratch` final stage, and the general lesson
-  that a plan document needs a deliberate reconciliation pass once
-  implementation diverges from it, not just an initial draft. These are
-  catalogued in `cloud-deploy-legacy-transferable-knowledge-results.md`, not
-  repeated here.
+  and hosting choices otherwise track closely). Several platform gotchas
+  worth keeping regardless of this decision (the arm64/amd64 mismatch from
+  Apple Silicon, the `GITHUB_TOKEN`/ghcr.io permissions, the non-root Docker
+  user, `go-sqlite3`'s CGO requirement ruling out a `scratch` final stage,
+  and reconciling a plan document once implementation diverges) are
+  catalogued in `cloud-deploy-legacy-transferable-knowledge-results.md`.
 
 ## Decision
 
@@ -121,13 +100,9 @@ travel forward from there, the same reasoning `qa-pipeline`'s own `ADR-000`
 already recorded for itself, one stage earlier.
 
 **Fork `qa-pipeline` on GitHub** rather than copy it. Rejected for the same
-reasons `qa-pipeline`'s own `ADR-000` rejected forking `ci-testing`: a fork
-is permanently marked "forked from" in GitHub's UI, is excluded from a
-profile's default repository view, doesn't count its commits toward the
-owner's contribution graph, and can't be reversed without contacting GitHub
-support. A repository generated from a template starts with a single commit
-that does count, and stands as its own portfolio entry rather than a
-visually subordinate branch.
+reasons
+[`qa-pipeline`'s `ADR-000`](https://github.com/CarpinetiOctavio/forum-app-qa-pipeline/blob/main/docs/decisions/ADR-000-starting-from-ci-testing-v1.1.0.md)
+gives for not forking `ci-testing`.
 
 **Replace `cloud-deploy-legacy`'s contents in place** (keep the existing
 repository, history, and URL, overwrite its contents with
@@ -170,20 +145,10 @@ archived), not overwritten and lost the way an in-place replacement would.
 - **The deeper, spoofable-authentication design — the client-supplied
   `X-User-ID` header with no real session behind it — is now this
   repository's own scope to resolve, not something inherited and left
-  alone.** `qa-pipeline`'s committed prose
-  (`docs/rules/testing-and-quality-gates.md`) explains why it left a
-  related asymmetry unreconciled but doesn't itself say where the
-  underlying model gets addressed; the commit that wrote that file
-  (`8b07d0d`) does: *"already documented as a known limitation in
-  ci-testing's ADR-008, deferred to cloud-deploy."* That intent never made
-  it into the file's own committed text — the same category of gap this
-  repo's own audit found four times over in `-legacy` (a decision that
-  exists only as someone's intent, never reconciled into a document a
-  later reader can find). This ADR does not repeat that gap: the handoff
-  is now recorded explicitly, in `ADR-001`, citing that commit by hash.
-  Accepting the scope is not the same claim as having designed or
-  implemented the fix — `ADR-001` accepts scope only; the mechanism is a
-  separate, future decision.
+  alone.** The handoff from `qa-pipeline` (commit `8b07d0d`), which never
+  reached that repository's committed prose, is recorded explicitly in
+  `ADR-001`. Accepting the scope is not the same claim as having designed or
+  implemented the fix: `ADR-001` accepts scope only.
 - `cloud-deploy-legacy` remains on GitHub, renamed, archived, and untouched
   in content, as the reference both audits were run against — not deleted,
   so the reasoning trail (built for TP8 → audited twice → superseded in

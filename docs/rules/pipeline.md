@@ -119,27 +119,31 @@ follow every rule in `docs/rules/docker.md`. **MUST** tag both images with
 
 ## Stage 6 — Push to ghcr.io
 **MUST**: push to `ghcr.io/carpinetioctavio`, tagged with the commit SHA
-only. **MUST**: declare `permissions: packages: write` at both the
-workflow level and the job level in `ci.yml` — a job-level-only grant is
-not sufficient (`cloud-deploy-legacy-transferable-knowledge-results.md`
-§2 documents this exact two-part requirement and the bootstrap ordering
-it implies: the first image push to a not-yet-existing package must happen
-manually, before the package can be linked to this repository, before the
-pipeline can push to it with `GITHUB_TOKEN`).
+only. **MUST**: declare `permissions: packages: write` in the two jobs
+that push, `docker-build-push-backend` and `docker-build-push-frontend`.
+Every job in `ci.yml` declares its own `permissions`, and a job that
+specifies any permission gets `none` for every one it does not list
+(GitHub's workflow syntax, `permissions`), so a grant at the workflow
+level gives no job anything; the workflow level declares only
+`contents: read`. **MUST**: bootstrap a not-yet-existing package by hand
+(`cloud-deploy-legacy-transferable-knowledge-results.md` §2): the first
+image push must happen manually, before the package can be linked to this
+repository, before the pipeline can push to it with `GITHUB_TOKEN`.
 
 **Resolved empirically, three independent layers, only one of them actually
 missing**: the first real pipeline run against this repo's own
 `docker-build-push-{backend,frontend}` jobs failed on both, identically,
 with `permission_denied: write_package` — despite `ci.yml` already
-declaring `packages: write` at both workflow and job level, and both
+declaring `packages: write` in both jobs, and both
 packages already public and linked to this repository via "Connect
 Repository." Three distinct GitHub mechanisms gate a workflow's write
 access to a container package, confirmed by testing each in isolation
 rather than assumed:
 
-1. **`ci.yml`'s own `permissions: packages: write`** (workflow and job
-   level) — necessary, present from the first attempt, not sufficient
-   alone.
+1. **`ci.yml`'s own `permissions: packages: write`** in each pushing job
+   — necessary, present from the first attempt, not sufficient alone. It
+   was also declared at the workflow level, where it had no effect, since
+   every job declares its own permissions.
 2. **The repository's `default_workflow_permissions` setting**
    (Settings → Actions → General → Workflow permissions) — tested at
    both `read` and `write` (`gh api repos/.../actions/permissions/workflow`
@@ -158,10 +162,10 @@ rather than assumed:
    `ghcr.io`'s own version API tagged with the real triggering commit SHA.
 
 The mechanism this section originally documented from `-legacy`'s history
-(§2's "both levels required") remains correct as a requirement — `ci.yml`
-still declares `packages: write` at both levels — but is not, on its own,
-the complete list of what a not-yet-authorized package needs from a
-fresh bootstrap. "Manage Actions access" is the piece `-legacy`'s own
+(§2's "both levels required") does not hold here: with a `permissions`
+block in every job, only the job-level grant counts. Nor is it the
+complete list of what a not-yet-authorized package needs from a fresh
+bootstrap. "Manage Actions access" is the piece `-legacy`'s own
 audit never surfaced, likely because that repo's packages predated this
 specific GitHub feature or never needed it isolated the way this
 repo's clean-bootstrap decision (`ADR-002`'s amendment) forced it to be.

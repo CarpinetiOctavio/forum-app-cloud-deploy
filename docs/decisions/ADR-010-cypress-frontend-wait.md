@@ -82,3 +82,22 @@ ready" moves.
 "This pull request" in Consequences is pull request #15. Its CI run
 `43131574727` passed Stage 4: the new step waited 11 s for the dev server,
 then every Cypress spec passed.
+
+## Amendment (2026-11-23): background processes, and the fix in `qa-pipeline`
+
+**`npm start &`.** The Decision starts the frontend with `npm start &`, which
+the Rationale of `qa-pipeline`'s
+[`ADR-003`](https://github.com/CarpinetiOctavio/forum-app-qa-pipeline/blob/main/docs/decisions/ADR-003-cypress.md)
+rejected as a source of race conditions and zombie processes. This record did
+not answer that rejection:
+- *Race conditions:* `wait-on` waits for a real `GET` response before Cypress
+  starts, as it already does for the backend.
+- *Zombie processes:* the GitHub-hosted runner terminates the processes a job
+  leaves running when the job ends. In run `43341781168`, the Cypress job logs
+  "Cleaning up orphan processes" and "Terminate orphan process" for `app`
+  (the backend, also started in the background) and `npm start`.
+
+**`qa-pipeline` is no longer affected.** The Consequences say `qa-pipeline`
+has the same latent failure and that it is not fixed there. It was fixed in
+`qa-pipeline` itself, with its own evidence, in the 2026-11-12 amendment of
+its `ADR-003`. The decision in this record is unchanged.

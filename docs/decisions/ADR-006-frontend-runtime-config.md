@@ -177,3 +177,10 @@ already accounted for. Everything else this ADR decided — the placeholder
 mechanism itself, the `ARG`/entrypoint split, `REACT_APP_API_URL`'s
 fallback behavior — is unchanged; only the filesystem location the
 substitution runs against moved.
+
+## Amendment (2026-11-23): the substitution runs at container start, not per image
+
+The Consequences say every deploy re-runs the substitution "against a newly
+built image"; the PROD deploy and a rollback deploy an image that already
+exists, and the substitution runs each time a container starts, so no stale
+value persists for that reason.

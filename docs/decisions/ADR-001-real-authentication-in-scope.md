@@ -33,8 +33,8 @@ This repository's own audit of `cloud-deploy-legacy` closed the loop on
 severity: the design isn't theoretical. A request presenting no credential
 beyond a client-supplied `X-User-ID` value was confirmed, live, against
 `-legacy`'s real deployed QA service, to delete another account's content —
-reproduced independently twice, once by Claude and once by Octavio himself
-by hand (`cloud-deploy-legacy-audit-results.md` §7).
+reproduced independently twice, once of them by hand
+(`cloud-deploy-legacy-audit-results.md` §7).
 
 This repository's own `docs/rules/constraints.md` and `CLAUDE.md`, as
 first drafted, stated the opposite of this ADR's decision — that modifying
@@ -64,14 +64,10 @@ of actually deciding it.
 ## Rationale
 
 **Why accept now, in an ADR of its own, rather than let it stay an
-unstated assumption**: the same failure this repo's own audit found
-repeatedly in `-legacy` — a real decision that exists only in someone's
-intent, never reconciled into a document a future reader can find — is
-what happened here too, one repo earlier in the series. `qa-pipeline`'s
-real intent to defer this forward existed from the moment `8b07d0d` was
-written; it just never made it into committed prose. Writing this ADR now,
-explicitly, with the commit that expressed the original intent cited by
-hash, closes that gap here rather than repeating it a third time.
+unstated assumption**: the handoff in `8b07d0d` never reached committed
+prose — the same gap this repo's audit found repeatedly in `-legacy`, here
+one repo earlier in the series. Recording it in an ADR, with that commit
+cited by hash, closes the gap instead of repeating it a third time.
 
 **Why this repo and not a new one**: the series has three stages
 (`ci-testing` → `qa-pipeline` → `cloud-deploy`), each with its own closed
@@ -96,7 +92,7 @@ true today and doesn't need implementation to back it; the mechanism isn't.
 | Alternative | Reason not chosen |
 |---|---|
 | Leave it exactly where `qa-pipeline` left it — inherited, accepted, unaddressed, permanently | Rejected: contradicts `qa-pipeline`'s own recorded intent (`8b07d0d`) to hand this forward, and leaves a confirmed, live-exploitable design in whatever this repo eventually deploys, with no repo left in the series to defer it to again. |
-| Design and implement the fix now, in the same ADR that accepts the scope | Rejected: no real analysis of the mechanism has happened yet — writing a solution before that analysis is the precise mistake this repo's own audit spent two full passes cataloguing in `-legacy`. Scope and mechanism are separable decisions; only one of them is actually settled right now. |
+| Design and implement the fix now, in the same ADR that accepts the scope | Rejected: no analysis of the mechanism has happened yet (see "Why scope-only" above). |
 | Treat this as `qa-pipeline`'s unfinished business, ask that repo's own future session to write the fix there instead | Rejected: `qa-pipeline`'s own `CLAUDE.md` scopes deployment/containerization away from itself by name, and its own commit already states the deferral was intentional, not an oversight to send back. Re-opening `qa-pipeline` to do this would itself violate the series' forward-propagation rule — corrections travel forward, not backward. |
 
 ## Consequences
@@ -111,17 +107,12 @@ true today and doesn't need implementation to back it; the mechanism isn't.
   work — this ADR does not pre-empt it. **That follow-up ADR MUST read
   `qa-pipeline`'s own
   [`ADR-005-edit-functionality`](https://github.com/CarpinetiOctavio/forum-app-qa-pipeline/blob/main/docs/decisions/ADR-005-edit-functionality.md)
-  before being written** — not kept as a local file here, per the
-  cross-repo referencing convention, but the reasoning it contains is a
-  direct prerequisite: replacing the raw `X-User-ID` header with a verified
-  identity necessarily touches every existing authorization check that
-  currently reads it (`DeletePost`'s service-layer comparison,
-  `DeleteComment`'s SQL `WHERE` clause), not just the login/session flow.
-  `ADR-005` already established, with real evidence from this codebase,
-  that the service-layer placement is the one that's actually testable and
-  the SQL placement is a blind spot. The follow-up ADR inherits that
-  finding by reading it there, rather than re-deriving it or duplicating
-  it into a file of this repo's own.
+  before being written**: replacing the raw `X-User-ID` header with a
+  verified identity touches every authorization check that reads it
+  (`DeletePost`'s service-layer comparison, `DeleteComment`'s SQL `WHERE`
+  clause), and that ADR established, with evidence from this codebase, that
+  the service-layer placement is testable and the SQL placement is a blind
+  spot. It is read there, not re-derived or copied here.
 - Until that follow-up ADR lands and is implemented, this repository's own
   containerized, deployed version of the app carries the same
   spoofable-authentication design `-legacy` had, confirmed live-exploitable

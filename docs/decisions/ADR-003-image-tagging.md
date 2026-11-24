@@ -60,34 +60,23 @@ separate build invocations having somehow produced the same output.
 
 ## Why `latest` specifically is excluded, not just discouraged
 
-`latest` is not a version — it is a pointer that every subsequent push
-silently reassigns. Three concrete failures follow directly from that
-property, not from any implementation detail of this pipeline:
+`latest` is not a version: it is a pointer that every push reassigns, so it
+fails each property above. It does not say which commit is running;
+redeploying "the version from before" requires knowing that version's
+identity from some other source; and if QA and PROD pull `latest` at
+different times, they can run different images while both report
+"running latest".
 
-1. **No way to know what's running.** A container tagged `latest` carries no
-   information about which commit produced it; that information exists only
-   in whichever build happened to run last, external to the tag itself.
-2. **Rollback requires external memory.** Redeploying "the version from
-   before" requires already knowing, from some other source, what that
-   version's real identity was — `latest` cannot answer that question about
-   itself.
-3. **Concurrent environments can silently diverge.** If QA and PROD each
-   pull `latest` independently, at different times, they can end up running
-   different images while both correctly report "running latest" — the tag
-   actively hides the divergence rather than surfacing it.
-
-A direct correction was already given during this series' own academic
-review, on `forum-app-qa-pipeline`, where `latest` appeared in a deploy
-configuration and was flagged. This decision is this repository's own
-independent grounding for the same conclusion, not a restatement of that
-correction — the reasoning above holds regardless of whether it had been
-raised before.
+The same conclusion was given as a correction during this series' academic
+review of `forum-app-qa-pipeline`, where `latest` appeared in a deploy
+configuration. The reasoning above is this repository's own grounding and
+holds regardless of that correction.
 
 ## Alternatives considered and rejected
 
 | Alternative | Reason not chosen |
 |---|---|
-| `latest` only | Mutable by construction — fails all three properties above. Excluded by the assignment's own requirement, and independently unsound per the reasoning above. |
+| `latest` only | Mutable by construction (see above), and excluded by the assignment. |
 | Semantic versioning (`v1.2.3`) | Requires a human or a tool to decide, for every commit, whether it's a major/minor/patch change — overhead with no corresponding benefit when every commit to `main` that passes the pipeline is, by this project's own design, a deployable unit. Semver communicates compatibility intent to external consumers of a published artifact; this image has exactly one internal consumer (Render, via this same pipeline), so that signal has no audience. |
 | Branch name + SHA (`main-a3f9c2b`) | The SHA alone is already globally unique and sufficient for lookup; prefixing it with the branch adds a second piece of state that can drift from the truth (a commit can exist on more than one branch) without adding any real disambiguation. |
 | Sequential build number | Monotonic and simple, but not self-describing — recovering "which commit is build #482" requires consulting the CI system's own external run history, reintroducing exactly the external-memory dependency `latest` has and a SHA does not. |

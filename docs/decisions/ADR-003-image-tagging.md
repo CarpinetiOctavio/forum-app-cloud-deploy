@@ -101,3 +101,31 @@ holds regardless of that correction.
 The deploy step and Render configuration now reference images by digest
 (see `ADR-007`'s amendment); the SHA tag is still published for
 traceability.
+
+## Amendment (2026-11-23): what the SHA tag guarantees and what it does not
+
+Four statements above do not hold:
+
+- **The tag can move.** The Rationale says no operation in normal pipeline
+  use repoints a SHA tag. Re-running a run builds the image again for the
+  same commit and pushes it under the same tag; builds are not reproducible
+  (`docs/rules/docker.md` Rule 6), so the tag moves to a different digest
+  (`ADR-007`'s amendment of 2026-11-11). A digest cannot move.
+- **Rollback and environment parity go by digest, not by tag.** "Rollback
+  becomes a lookup" and "Environment parity becomes checkable" rely on the
+  tag naming one set of bytes. Because it can move, deploys pass the digest
+  (`ADR-007`'s amendment) and rollback takes digests
+  (`docs/rules/deployment.md`, Rollback).
+- **The deploy mechanism is not open.** The Consequences call it "still
+  open"; `ADR-007` decided it.
+- **Pull request runs tag a merge commit that no branch contains.** On a
+  `pull_request` event, `github.sha` is the commit GitHub creates to test
+  the merge of the pull request into its base. Run `43341192421` (a pull
+  request from `staging`) pushed its images under `df55240`, "Merge 15e525b
+  into 7ee46bf", which is on no branch. Those images trace to a test merge,
+  not to a commit in the history, and are never deployed: only a push to
+  `main` deploys (`ADR-009`).
+
+The decision is unchanged: every image is tagged with `${{ github.sha }}`,
+never `latest`. The tag traces an image to the commit that produced it; the
+digest identifies what is deployed.

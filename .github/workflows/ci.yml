@@ -335,6 +335,11 @@ jobs:
     needs: [docker-build-push-backend, docker-build-push-frontend]
     if: github.ref == 'refs/heads/main'
     environment: qa
+    # Shared with rollback.yml: one Render deploy at a time, the running one
+    # never cancelled (docs/rules/deployment.md, Rollback).
+    concurrency:
+      group: render-deploy
+      cancel-in-progress: false
     permissions:
       contents: read
 
@@ -372,6 +377,11 @@ jobs:
     needs: [deploy-qa, docker-build-push-backend, docker-build-push-frontend]
     if: github.ref == 'refs/heads/main'
     environment: prod
+    # Shared with rollback.yml: one Render deploy at a time, the running one
+    # never cancelled (docs/rules/deployment.md, Rollback).
+    concurrency:
+      group: render-deploy
+      cancel-in-progress: false
     permissions:
       contents: read
 

@@ -117,17 +117,47 @@ image digest referenced by the PROD deploy, for the same pipeline run,
 MUST be identical — checkable directly against the deploy mechanism's own
 logs, not assumed from the fact that both stages "succeeded."
 
-## Rollback — principle now, exact steps once the mechanism is decided
-**MUST**: be able to redeploy a previous known-good commit-SHA tag without
-rebuilding anything. This is only possible because every image is tagged
-with its commit SHA and never overwritten (`docker.md` Rule 5) — rollback
-is a consequence of that rule, not a separate feature bolted on.
+## Rollback
+**MUST**: roll back by redeploying a pair of image digests (backend and
+frontend) that already reached PROD from `main`, without rebuilding
+anything, through `.github/workflows/rollback.yml`. **MUST NOT**: roll back
+by tag.
+- Why by digest: a rerun moves a commit-SHA tag to a new digest
+  (`ADR-003`'s amendment of 2026-11-23); a digest names one image.
+- Why only digests that reached PROD from `main`: images built off the
+  path to `main` never passed the quality gate and are never deployed
+  (`constraints.md`, `ADR-009`'s amendment of 2026-11-23).
 
-The exact rollback steps (which dashboard action, which API call) depend on
-the mechanism decided in `pipeline.md` — written here once that decision
-exists, not guessed at now the way `-legacy`'s rollback section ended up
-being the one file that accidentally matched its real mechanism while
-three others didn't.
+**Steps:**
+1. Find the two digests to return to: the deploy logs of the pipeline run
+   that last deployed them print each image as `…@sha256:…`.
+2. Run the **Rollback** workflow from `main` (Actions → Rollback → Run
+   workflow) with both digests.
+3. The `validate` job checks each digest, read-only, before any deploy
+   hook is called: the form `sha256:<64 hex>`, that the image exists in
+   ghcr.io, that the commit-SHA tag of that image currently points to it,
+   and that this commit has a successful deployment from `main` in `prod`
+   (GitHub Deployments API).
+4. QA is redeployed and smoke-tested, then PROD waits for the same
+   approval as the pipeline, and is redeployed and smoke-tested.
+
+**What this does and does not guarantee:**
+- GitHub records the commit of a deployment, not the image digest. The
+  check proves that the commit reached PROD, not that this exact digest
+  did; a digest left untagged by a rerun is rejected (`ADR-007`'s
+  amendment of 2026-11-23).
+- The deployments a rollback creates record the commit of `main` at the
+  time of the run, not the commit of the image; the deploy logs record the
+  digest.
+- A rollback is a deploy: it replaces the container, so the database
+  starts empty, as with any deploy (`ADR-005`).
+- Every deploy job, in `ci.yml` and in `rollback.yml`, is in one
+  concurrency group (`render-deploy`, `cancel-in-progress: false`): one
+  runs at a time, and the running one is never cancelled. A newer pending
+  job replaces an older pending one (GitHub's default), so a pending
+  deploy can be cancelled by a newer one; the cancellation is visible in
+  its run. Whether a job waiting for PROD approval holds the group is not
+  documented by GitHub.
 
 ## QA vs. PROD — what's allowed to differ, what's never allowed to differ
 **Allowed to differ**: runtime environment variables, resource allocation

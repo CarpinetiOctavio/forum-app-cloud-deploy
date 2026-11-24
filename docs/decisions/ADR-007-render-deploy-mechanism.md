@@ -175,3 +175,36 @@ own amendment.
 **Correction.** `RENDER_API_KEY` is used only for read-only `GET` calls:
 the deploy status this ADR describes, and the service lookup that resolves
 the public URL the smoke test needs — not for the status call alone.
+
+## Amendment (2026-11-23): rollback through the same mechanism
+
+**What changes.** Rollback is a separate workflow,
+`.github/workflows/rollback.yml`, run by hand from `main`. It takes the
+backend and frontend digests to return to and redeploys them with this
+ADR's mechanism: the same hooks and the same read-only status calls, QA
+first, then PROD behind the same approval. Nothing is rebuilt. The steps
+are in `docs/rules/deployment.md`, Rollback.
+
+**Which digests are accepted.** Only digests already deployed to PROD from
+`main`. Before any hook is called, a read-only check confirms that the
+image exists in ghcr.io, that its commit-SHA tag currently points to that
+digest, and that the commit has a successful deployment from `main` in the
+`prod` environment, as the GitHub Deployments API records it.
+
+**Limit.** The Deployments API records the commit, not the digest, and a
+rerun can produce another digest for the same commit (`ADR-003`'s
+amendment of 2026-11-23). The check proves that the commit reached PROD,
+not that this exact digest did. A digest left untagged by a rerun is
+rejected. No infrastructure is added to record digests per deployment.
+
+**One deploy at a time.** The deploy jobs of the pipeline and of the
+rollback share one concurrency group without cancelling the running job.
+What that does and does not guarantee is in `docs/rules/deployment.md`.
+
+**Alternatives rejected.**
+- *Render's dashboard rollback.* It skips the approval gate for PROD and
+  leaves no record of the digest in this repository's runs.
+- *Re-running the deploy jobs of an old run.* GitHub allows a re-run only
+  up to 30 days after the initial run ("Re-running workflows and jobs",
+  consulted 2026-11-23), so it cannot reach an older release; a re-run of
+  the whole run also rebuilds the images and moves their tags.

@@ -54,6 +54,11 @@ The `push` trigger on all three branches is correct and deliberate for
 Stages 1–6. It is separate from the Stage 7/9 branch mapping, which was
 wrong and is corrected in `ADR-009`.
 
+**Rollback is a separate workflow**: `.github/workflows/rollback.yml`,
+triggered only by `workflow_dispatch`, run from `main`. It builds nothing:
+it validates two digests and redeploys them through Stages 7–9's
+environments and scripts (`docs/rules/deployment.md`, Rollback).
+
 ## Stage order — sequential and blocking
 Every stage MUST complete successfully before the next starts. A failure
 at any stage MUST abort the entire pipeline — no later stage runs. No
@@ -71,6 +76,11 @@ Docker build-and-push jobs of Stages 5–6, which both start once
 | 7 | Deploy to QA (Render) + smoke test | New — mechanism decided, `ADR-007`; trigger corrected, `ADR-009` | `main` only |
 | 8 | Manual approval gate | New | `main` only |
 | 9 | Deploy to PROD (Render) + smoke test | New — same mechanism as Stage 7 | `main` only |
+
+Stages 7 and 9, and the two deploy jobs of `rollback.yml`, share one
+concurrency group (`render-deploy`, `cancel-in-progress: false`): one
+Render deploy at a time. Its limits are in `docs/rules/deployment.md`,
+Rollback.
 
 ## Stages 1–4 — inherited, verified, not re-decided here
 This repo's test suite and quality-gate jobs are what this repo started

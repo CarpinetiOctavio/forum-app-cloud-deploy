@@ -1,5 +1,7 @@
 # Operating rules — Smoke tests (forum-app-cloud-deploy)
 
+> **Agent instructions.** This file is operating context for an AI assistant working in this repository, not project documentation. Decisions and their reasons are in [`docs/decisions/`](../decisions/).
+
 ## Purpose
 This file states the requirement for verifying a deployment succeeded, as
 a concern separate from verifying the code is correct. Read

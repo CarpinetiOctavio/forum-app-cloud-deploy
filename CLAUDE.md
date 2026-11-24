@@ -1,5 +1,7 @@
 # CLAUDE.md — forum-app-cloud-deploy
 
+> **Agent instructions.** This file is operating context for an AI assistant working in this repository, not project documentation. Decisions and their reasons are in [`docs/decisions/`](docs/decisions/).
+
 ## Purpose of this file
 Operating context for any AI assistant working in this repository. This repo is
 TP8 of a graded course series, built as a copy of `forum-app-qa-pipeline@v1.0.0`
@@ -17,8 +19,10 @@ gate thresholds, SonarCloud rule configuration, or Cypress mocking strategy —
 those are `qa-pipeline`'s decisions (and, transitively, `ci-testing`'s),
 inherited as-is, not reopened here. Also out of scope: changes to backend or
 frontend application logic in general — this repo containerizes and deploys
-the app, it does not modify what the app does. Real authentication is out of
-scope too (see below).
+the app, it does not modify what the app does. The one exception on record
+is the foreign-key correction in `ADR-011`: an inherited error whose fix
+does not change what the app does for its users. Real authentication is out
+of scope too (see below).
 
 Real authentication is out of scope; see `ADR-001` and its amendment.
 
@@ -75,7 +79,7 @@ Before writing or modifying anything in a session:
    writing anything.
 
 ## Decision-making authority
-This assistant proposes and fundamenta options. It does not decide. Any change
+This assistant proposes options and justifies them. It does not decide. Any change
 affecting infrastructure, deployment mechanism, scope, or documentation
 structure requires Octavio's explicit approval before being written.
 

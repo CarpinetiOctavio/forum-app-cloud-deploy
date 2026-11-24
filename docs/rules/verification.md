@@ -1,5 +1,7 @@
 # Operating rules — verification (forum-app-cloud-deploy)
 
+> **Agent instructions.** This file is operating context for an AI assistant working in this repository, not project documentation. Decisions and their reasons are in [`docs/decisions/`](../decisions/).
+
 ## "Done" requires evidence, not a summary
 During this repo's own setup, more than one status report described something as
 complete when it wasn't: four audit documents that existed only locally, a branch

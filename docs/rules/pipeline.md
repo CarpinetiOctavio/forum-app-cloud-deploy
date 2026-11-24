@@ -1,5 +1,7 @@
 # Operating rules — Pipeline (forum-app-cloud-deploy)
 
+> **Agent instructions.** This file is operating context for an AI assistant working in this repository, not project documentation. Decisions and their reasons are in [`docs/decisions/`](../decisions/).
+
 ## Purpose and authority
 This file states the required structure of this repo's CI/CD pipeline.
 Read `docs/rules/constraints.md` first — every rule here derives from a
@@ -7,7 +9,7 @@ constraint stated there. Docker-specific requirements referenced below are
 `docs/rules/docker.md`'s scope, not restated here.
 
 ## Trigger — verified against the series' real pattern, not invented
-**MUST**: `push: branches: ['feature/**']`.
+**MUST**: `push: branches: ['feature/**', staging, main]`.
 **MUST**: `pull_request: branches: [staging, main]`
 **Why this exact shape, not a guess**: confirmed directly against
 `ci-testing@v1.1.0` (`push: ['feature/**']`, `pull_request: [staging, main]`)
@@ -31,15 +33,40 @@ opposite direction from a bare `[main]` — too broad, not too narrow — and
 both are wrong for the same underlying reason: neither was checked against
 what the trigger is actually supposed to gate before being written.
 
-**Nota post-verificación (`ADR-009`)**: este trigger de `push` en las tres
-ramas es correcto y deliberado para Stages 1–6. No confundir con el
-branch-mapping de Stages 7/9, que sí estaba mal — ver `ADR-009`.
+**Why `push` on `staging` and `main` does not repeat what `ci-testing`
+rejected**: `ci-testing`'s
+[`ADR-004`](https://github.com/CarpinetiOctavio/forum-app-ci-testing/blob/main/docs/decisions/ADR-004-ci-pipeline-design.md)
+rejected `push` and `pull_request` triggers on the same branch, because a
+direct push could skip the pull request. Here the ruleset
+`staging-and-main-protection` requires a pull request on both branches and
+has no bypass actors, so a direct push is rejected; the `push` trigger only
+runs on the merge commit a pull request produces. On `main`, that run is the
+one that deploys (`ADR-009`).
+
+**Required status checks**: the ruleset requires `Backend Tests (Go)`,
+`Frontend Tests (React)`, `Backend Build`, `Frontend Build`,
+`SonarCloud Code Analysis`, `Cypress E2E`, `Test Summary`,
+`Docker Build & Push (Backend)` and `Docker Build & Push (Frontend)`. The
+two Docker checks are required so that an image that fails to build blocks
+the merge, instead of surfacing only after it, in the run that deploys.
+
+The `push` trigger on all three branches is correct and deliberate for
+Stages 1–6. It is separate from the Stage 7/9 branch mapping, which was
+wrong and is corrected in `ADR-009`.
+
+**Rollback is a separate workflow**: `.github/workflows/rollback.yml`,
+triggered only by `workflow_dispatch`, run from `main`. It builds nothing:
+it validates two digests and redeploys them through Stages 7–9's
+environments and scripts (`docs/rules/deployment.md`, Rollback).
 
 ## Stage order — sequential and blocking
 Every stage MUST complete successfully before the next starts. A failure
 at any stage MUST abort the entire pipeline — no later stage runs. No
 stage is skipped, parallelized, or reordered without an ADR documenting
-why.
+why. Within a stage, independent jobs run in parallel: the backend and
+frontend jobs of Stages 1–4 (`qa-pipeline`'s `ADR-004`), and the two
+Docker build-and-push jobs of Stages 5–6, which both start once
+`Test Summary` passes.
 
 | Order | Stage | Status | Runs on |
 |-------|-------|--------|---------|
@@ -49,6 +76,11 @@ why.
 | 7 | Deploy to QA (Render) + smoke test | New — mechanism decided, `ADR-007`; trigger corrected, `ADR-009` | `main` only |
 | 8 | Manual approval gate | New | `main` only |
 | 9 | Deploy to PROD (Render) + smoke test | New — same mechanism as Stage 7 | `main` only |
+
+Stages 7 and 9, and the two deploy jobs of `rollback.yml`, share one
+concurrency group (`render-deploy`, `cancel-in-progress: false`): one
+Render deploy at a time. Its limits are in `ADR-007`'s amendment of
+2026-11-23.
 
 ## Stages 1–4 — inherited, verified, not re-decided here
 This repo's test suite and quality-gate jobs are what this repo started
@@ -221,7 +253,7 @@ other closes.
 4. Confirm both Dockerfiles exist and build successfully before writing
    Stage 5.
 5. Confirm `sonar-project.properties` points at this repo's own SonarCloud
-   project (not `qa-pipeline`'s, still inherited unmodified as of the last
-   checked state) before relying on Stage 3 passing meaning anything.
+   project (`sonar.projectKey=CarpinetiOctavio_forum-app-cloud-deploy`, not
+   `qa-pipeline`'s) before relying on Stage 3 passing meaning anything.
 6. Report the proposed `ci.yml` change and wait for approval before writing
    it.

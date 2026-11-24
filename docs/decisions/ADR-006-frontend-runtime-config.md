@@ -44,22 +44,15 @@ code. Wiggins' Twelve-Factor App Factor III applies here for the same
 reason it applies to `ADR-005`: config that varies by deploy (an API base
 URL) must live outside the code, and right now it doesn't.
 
-**Same clarification as `ADR-005`, and for the identical reason: this is
-not a conceptual error in `qa-pipeline` or `ci-testing`, it is the correct
-absence of something neither repo ever needed.** Every environment the
-frontend has ever run in, across both prior repos, is `localhost:3000`
-talking to `localhost:8080` — local development, or the same pairing inside
-one CI job for Cypress. There was never a second, differently-addressed
-backend for `postService.ts`/`authService.ts` to need to distinguish.
-Hardcoding the URL was correctly scoped for that reality, not a shortcut.
-The requirement is new here — two named environments, each with its own
-public backend URL — introduced by this repository's own scope, not a
-latent bug inherited from earlier work. Consequence for how the fix gets
-made: new configurability, not a repair, with the same non-sensitive
-`localhost:8080` value preserved as the fallback default (never a real
-QA/PROD URL or any credential baked in as a "convenient" default), so local
-development keeps working unchanged and no environment-specific or
-sensitive value ever ships inside the image itself.
+**As with `ADR-005`'s database path, this is not a defect in `qa-pipeline`
+or `ci-testing`.** Every environment the frontend ran in across both repos
+is `localhost:3000` talking to `localhost:8080`, locally or inside one CI
+job for Cypress. The requirement (two environments, each with its own
+public backend URL) is introduced by this repository's scope, so the fix is
+new configurability, not a repair. The non-sensitive `localhost:8080` stays
+as the fallback default, never a real QA/PROD URL or any credential, so
+local development keeps working and no environment-specific or sensitive
+value ships inside the image.
 
 ## Decision
 
@@ -121,7 +114,7 @@ the Docker layer, not the application layer.
 
 | Alternative | Reason not chosen |
 |---|---|
-| Separate image per environment | Directly violates the single-artifact constraint (`docs/rules/constraints.md`) that this repository's entire QA-then-PROD promotion guarantee depends on — rejected without further consideration once that conflict is identified. |
+| Separate image per environment | Violates the single-artifact constraint (`docs/rules/constraints.md`); see the Rationale. |
 | nginx reverse proxy with relative `/api/` paths | Technically viable, but requires changing every API call site to use relative paths (not just the two `API_URL` constants) and adding an nginx `proxy_pass` configuration — a wider source-code change than the two-constant fix this decision requires, for an equivalent outcome. |
 | `window._env_` global via a separate `public/env.js` script | Also viable, but adds more moving parts than the entrypoint approach: an extra `<script>` tag in `index.html`, a global object, and every service file reading from `window._env_` instead of `process.env` — a larger deviation from CRA's own idiomatic environment-variable pattern than a placeholder substitution that preserves `process.env.REACT_APP_API_URL` as the actual read site in source. |
 | Leave the hardcoded `localhost:8080` and accept it as a known limitation | Rejected as internally inconsistent, for the same reason as the equivalent option in `ADR-005`: this repository's own rules already forbid environment-specific values baked into the image. The application would also be **functionally broken** in any deployed environment, not just architecturally inconsistent — `localhost:8080` resolves to nothing inside a QA or PROD container. |
@@ -140,13 +133,6 @@ the Docker layer, not the application layer.
 - Every new deploy re-runs the substitution fresh against a newly built
   image — no stale injected value can persist across deploys, since nothing
   is cached or written back to the image itself.
-- This decision and `ADR-005` share a structural pattern worth naming
-  explicitly: both found the inherited codebase not merely
-  differently-configured from what `cloud-deploy-legacy` assumed, but
-  **not configurable at all** at the point this repository actually starts
-  from — both required a real, scoped, in-bounds source fix as a
-  precondition, not just a deployment-layer decision layered on top of
-  already-adequate code.
 
 ## Amendment (2026-08-04): substitution target moved from `/usr/share/nginx/html` to `/tmp/html`
 
@@ -191,3 +177,10 @@ already accounted for. Everything else this ADR decided — the placeholder
 mechanism itself, the `ARG`/entrypoint split, `REACT_APP_API_URL`'s
 fallback behavior — is unchanged; only the filesystem location the
 substitution runs against moved.
+
+## Amendment (2026-11-23): the substitution runs at container start, not per image
+
+The Consequences say every deploy re-runs the substitution "against a newly
+built image"; the PROD deploy and a rollback deploy an image that already
+exists, and the substitution runs each time a container starts, so no stale
+value persists for that reason.

@@ -19,8 +19,10 @@ gate thresholds, SonarCloud rule configuration, or Cypress mocking strategy —
 those are `qa-pipeline`'s decisions (and, transitively, `ci-testing`'s),
 inherited as-is, not reopened here. Also out of scope: changes to backend or
 frontend application logic in general — this repo containerizes and deploys
-the app, it does not modify what the app does. Real authentication is out of
-scope too (see below).
+the app, it does not modify what the app does. The one exception on record
+is the foreign-key correction in `ADR-011`: an inherited error whose fix
+does not change what the app does for its users. Real authentication is out
+of scope too (see below).
 
 Real authentication is out of scope; see `ADR-001` and its amendment.
 

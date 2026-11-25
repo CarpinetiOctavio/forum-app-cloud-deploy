@@ -119,3 +119,18 @@ and waited on.
   Consequences are unaffected — this amendment only corrects how the two
   specific packages this repository uses got created, not the choice of
   registry itself.
+
+## Amendment (2026-11-24): the workflow-level grant
+
+The Rationale cites `docs/rules/pipeline.md`'s Stage 6 requirement as
+`permissions: packages: write` "at the workflow level". Every job in
+`.github/workflows/ci.yml` declares its own `permissions`, and a job that
+lists any permission gets `none` for those it does not list (GitHub's
+workflow syntax, `permissions`), so that grant had no effect: in run
+`45336308644` on `main`, the token of `Backend Tests (Go)` and of
+`Deploy to QA (Render)` had only `Contents: read` and `Metadata: read`. It
+was removed; the two jobs that push declare `packages: write` themselves.
+The workflow level keeps only `contents: read`, so that a future job
+without a `permissions` block of its own receives read access, not the
+repository's default. Removing a grant that had no effect applies the same
+criterion as the Rationale: a credential's blast radius.

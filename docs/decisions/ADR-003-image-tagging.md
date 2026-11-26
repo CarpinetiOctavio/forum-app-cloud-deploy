@@ -129,3 +129,16 @@ Four statements above do not hold:
 The decision is unchanged: every image is tagged with `${{ github.sha }}`,
 never `latest`. The tag traces an image to the commit that produced it; the
 digest identifies what is deployed.
+
+## Amendment (2026-11-24): where the correction about `latest` came from
+
+The section on why `latest` is excluded says the same conclusion was given
+as a correction during "this series' academic review of
+`forum-app-qa-pipeline`, where `latest` appeared in a deploy
+configuration". That is not what happened: the correction was made to
+another student's work and passed on to the author. No deploy
+configuration in the history of this series' repositories, or of the
+repositories they started from, uses `latest`; the one `latest` tag this
+repository pushed is the bootstrap push recorded in `ADR-002`'s amendment
+of 2026-08-05. The reasoning of this record does not depend on that
+correction and is unchanged.

@@ -143,9 +143,9 @@ by tag.
    approval as the pipeline, and is redeployed and smoke-tested.
 
 **Limits** (what the check proves, what a rollback's deployments record,
-the shared concurrency group, the empty database): `ADR-007`'s amendment
-of 2026-11-23. **MUST NOT** state more than that amendment does about what
-a rollback guarantees.
+the shared concurrency group, the empty database): `ADR-007`'s amendments
+of 2026-11-23 and of 2026-11-24. **MUST NOT** state more than those
+amendments do about what a rollback guarantees.
 
 ## QA vs. PROD — what's allowed to differ, what's never allowed to differ
 **Allowed to differ**: runtime environment variables, resource allocation

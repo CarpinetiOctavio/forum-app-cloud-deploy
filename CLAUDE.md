@@ -86,7 +86,7 @@ structure requires Octavio's explicit approval before being written.
 ## Requirements for any proposed change, in order
 1. Scope check — strictly within TP8's boundary, or explicitly justified under
    the exceeds-scope criterion above?
-2. Fundamentation check — grounded in a real software engineering concept
+2. Justification check — grounded in a real software engineering concept
    relevant to containerization, registries, deployment, or CI/CD, not just
    "it works" or "the legacy repo did it this way"?
    A change that fails either check gets flagged, not implemented.

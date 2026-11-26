@@ -39,6 +39,8 @@ The validation, its limits and the alternatives rejected: [ADR-007](docs/decisio
 10. **One frontend image for QA and PROD** (this repository). The backend URL is substituted into the built bundle when the container starts; one image per environment would put in PROD an image QA never ran ([ADR-006](docs/decisions/ADR-006-frontend-runtime-config.md)).
 11. **Rollback by digest, through the pipeline's own path** (this repository). It validates digests already deployed to PROD from `main`, then deploys them to QA and, after approval, to PROD, without rebuilding. Render's dashboard rollback was rejected: it skips the PROD approval and leaves no record of the digest ([ADR-007](docs/decisions/ADR-007-render-deploy-mechanism.md), amendment of 2026-11-23).
 
+Points 7, 9 and 11, and the two limitations about a backend and a frontend never tested together, are explained with an analogy in [lot traceability](docs/lot-traceability.md).
+
 ## Limitations
 
 - **Authentication can be spoofed.** The app trusts a client-supplied `X-User-ID` header, and QA and PROD carry that design; authentication is outside the series' scope ([ADR-001](docs/decisions/ADR-001-real-authentication-in-scope.md), amendment of 2026-11-11).

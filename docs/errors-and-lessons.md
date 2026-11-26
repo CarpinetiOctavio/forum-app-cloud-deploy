@@ -42,4 +42,7 @@ The errors found while building and auditing this series ([`forum-app-ci-testing
 ## In the first person
 
 <!-- first-person:start -->
+> The errors are here because they are where my understanding changed, which following a tutorial would not have given me. The clearest case: I thought a rollback went back to a commit's tag. Building it, I understood that a tag is a label that can move, and that only the digest guarantees a return to what was tested; trying to explain it through an analogy, [lot traceability](lot-traceability.md), is what settled it. Two lessons of method remain from this series. First, explaining why without showing how validates nothing: without the pipeline running, a decision is only a claim. Second, trying to make everything optimal can oversize it until it does more harm than good; knowing when to stop is also learned by building.
+>
+> — @CarpinetiOctavio
 <!-- first-person:end -->

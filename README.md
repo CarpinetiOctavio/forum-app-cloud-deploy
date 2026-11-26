@@ -6,7 +6,7 @@ This repository takes the pipeline of the previous two to deployment. Every run 
 
 > **Series.** This is the third of three repositories: [ci-testing](https://github.com/CarpinetiOctavio/forum-app-ci-testing) → [qa-pipeline](https://github.com/CarpinetiOctavio/forum-app-qa-pipeline) → **cloud-deploy**. The split follows the course's assignments (TP6, TP7, TP8 of Software Engineering III, UCC); in practice it would be one repository with tags. `forum-app-qa-pipeline-legacy` and `forum-app-cloud-deploy-legacy` hold the earlier TP7 and TP8 submissions; they are not stages of the series.
 
-Reading paths: in 30 seconds, the opening paragraph; in five minutes, "What this series shows", "The pipeline by analogy", "Limitations" and "Errors and lessons"; in depth, [`docs/errors-and-lessons.md`](docs/errors-and-lessons.md) and the decision records each point links. The rest is reference.
+Reading paths: in 30 seconds, the opening paragraph; in five minutes, "The pipeline by analogy", "What this series shows", "Limitations" and "Errors and lessons"; in depth, [`docs/errors-and-lessons.md`](docs/errors-and-lessons.md) and the decision records each point links. The rest is reference.
 
 ## Status
 
@@ -25,6 +25,14 @@ Triggers and one build per run: [ADR-009](docs/decisions/ADR-009-single-build-tr
 
 The validation, its limits and the alternatives rejected: [ADR-007](docs/decisions/ADR-007-render-deploy-mechanism.md), amendment of 2026-11-23.
 
+## The pipeline by analogy
+
+**[Lot traceability](docs/lot-traceability.md)** explains the pipeline as a pharmaceutical lot system, with a figure and where the analogy breaks:
+
+- **Build → manufacturing run; digest → lot number.**
+- **SHA tag → the formula version printed on the box,** which two lots can share.
+- **Release → a lot, not a label;** a rollback, like a recall, returns to a lot already released.
+
 ## What this series shows
 
 1. **Mocks stand exactly at the I/O boundary** ([ci-testing](https://github.com/CarpinetiOctavio/forum-app-ci-testing)). Repositories and `axios` are replaced, and the unit's own logic runs for real: mocking the unit itself would make the test tautological, and a real database would make it an integration test ([ADR-003](https://github.com/CarpinetiOctavio/forum-app-ci-testing/blob/main/docs/decisions/ADR-003-mocking-strategy.md)).
@@ -38,14 +46,6 @@ The validation, its limits and the alternatives rejected: [ADR-007](docs/decisio
 9. **The SHA tag traces; the digest deploys** (this repository). Builds are not reproducible, so a rerun would push a different image under the same tag; deploys pass the digest, which cannot move ([ADR-003](docs/decisions/ADR-003-image-tagging.md), amendment of 2026-11-23; [ADR-007](docs/decisions/ADR-007-render-deploy-mechanism.md), amendment of 2026-11-11).
 10. **One frontend image for QA and PROD** (this repository). The backend URL is substituted into the built bundle when the container starts; one image per environment would put in PROD an image QA never ran ([ADR-006](docs/decisions/ADR-006-frontend-runtime-config.md)).
 11. **Rollback by digest, through the pipeline's own path** (this repository). It accepts a digest only if its commit-SHA tag points to it and its commit has a successful `prod` deployment created by `ci.yml`, then deploys the digests to QA and, after approval, to PROD, without rebuilding. Render's dashboard rollback was rejected: it skips the PROD approval and leaves no record of the digest ([ADR-007](docs/decisions/ADR-007-render-deploy-mechanism.md), amendment of 2026-11-23).
-
-## The pipeline by analogy
-
-**[Lot traceability](docs/lot-traceability.md)** explains the pipeline as a pharmaceutical lot system, with a figure and where the analogy breaks:
-
-- **Build → manufacturing run; digest → lot number.**
-- **SHA tag → the formula version printed on the box,** which two lots can share.
-- **Release → a lot, not a label;** a rollback, like a recall, returns to a lot already released.
 
 ## Limitations
 

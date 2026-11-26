@@ -6,7 +6,7 @@ This repository takes the pipeline of the previous two to deployment. Every run 
 
 > **Series.** This is the third of three repositories: [ci-testing](https://github.com/CarpinetiOctavio/forum-app-ci-testing) → [qa-pipeline](https://github.com/CarpinetiOctavio/forum-app-qa-pipeline) → **cloud-deploy**. The split follows the course's assignments (TP6, TP7, TP8 of Software Engineering III, UCC); in practice it would be one repository with tags.
 
-Reading paths: in 30 seconds, the opening paragraph; in five minutes, "What this series shows", "Limitations" and "Errors and lessons"; in depth, [`docs/errors-and-lessons.md`](docs/errors-and-lessons.md) and the decision records each point links. The rest is reference.
+Reading paths: in 30 seconds, the opening paragraph; in five minutes, "What this series shows", "The pipeline by analogy", "Limitations" and "Errors and lessons"; in depth, [`docs/errors-and-lessons.md`](docs/errors-and-lessons.md) and the decision records each point links. The rest is reference.
 
 ## Status
 
@@ -39,7 +39,9 @@ The validation, its limits and the alternatives rejected: [ADR-007](docs/decisio
 10. **One frontend image for QA and PROD** (this repository). The backend URL is substituted into the built bundle when the container starts; one image per environment would put in PROD an image QA never ran ([ADR-006](docs/decisions/ADR-006-frontend-runtime-config.md)).
 11. **Rollback by digest, through the pipeline's own path** (this repository). It validates digests already deployed to PROD from `main`, then deploys them to QA and, after approval, to PROD, without rebuilding. Render's dashboard rollback was rejected: it skips the PROD approval and leaves no record of the digest ([ADR-007](docs/decisions/ADR-007-render-deploy-mechanism.md), amendment of 2026-11-23).
 
-Points 7, 9 and 11, and the two limitations about a backend and a frontend never tested together, are explained with an analogy in [lot traceability](docs/lot-traceability.md).
+## The pipeline by analogy
+
+A commit is a formula with its version, a build is a manufacturing run, the image is the lot it produces and the digest is its lot number; the SHA tag is the formula version printed on the box, which two lots of the same formula share. Quality control releases a lot, not the formula, and a recall goes back to a lot already released, identified by its number, just as a rollback goes back to a digest that was in PROD. The full analogy is in [lot traceability](docs/lot-traceability.md), with its figure and where the analogy breaks.
 
 ## Limitations
 

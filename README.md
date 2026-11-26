@@ -92,7 +92,7 @@ What a copy of this repository needs, from GitHub, ghcr.io, SonarCloud and Rende
 
 ## AI disclosure
 
-Language models (Claude, in chat sessions and through Claude Code) were used to audit the repository, check claims against it, and write text and code. Every design choice was decided by Octavio Carpineti. From commit `d15e749` on, every commit other than a merge commit carries a `Co-Authored-By` trailer for that use; the two earlier commits, `7ca7078` and `c179a1b`, do not.
+Language models (Claude, in chat sessions and through Claude Code) were used to audit the repository, check claims against it, and write text and code. Every design choice was decided by Octavio Carpineti. From commit `d15e749` on, every commit other than a merge commit carries a `Co-Authored-By` trailer for that use; the two earlier commits, `7ca7078` and `c179a1b`, do not. Octavio Carpineti's own text is the "In the first person" section of [`docs/errors-and-lessons.md`](docs/errors-and-lessons.md#in-the-first-person) and the core of the analogy in [`docs/lot-traceability.md`](docs/lot-traceability.md), as its opening line states.
 
 ## License
 

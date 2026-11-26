@@ -41,7 +41,11 @@ The validation, its limits and the alternatives rejected: [ADR-007](docs/decisio
 
 ## The pipeline by analogy
 
-A commit is a formula with its version, a build is a manufacturing run, the image is the lot it produces and the digest is its lot number; the SHA tag is the formula version printed on the box, which two lots of the same formula share. Quality control releases a lot, not the formula, and a recall goes back to a lot already released, identified by its number, just as a rollback goes back to a digest that was in PROD. The full analogy is in [lot traceability](docs/lot-traceability.md), with its figure and where the analogy breaks.
+**[Lot traceability](docs/lot-traceability.md)** explains the pipeline as a pharmaceutical lot system, with a figure and where the analogy breaks:
+
+- **Build → manufacturing run; digest → lot number.**
+- **SHA tag → the formula version printed on the box,** which two lots can share.
+- **Release → a lot, not a label;** a rollback, like a recall, returns to a lot already released.
 
 ## Limitations
 

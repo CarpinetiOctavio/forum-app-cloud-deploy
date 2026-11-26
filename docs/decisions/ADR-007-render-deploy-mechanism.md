@@ -240,3 +240,13 @@ is running. In operation, a rollback does not reach QA while a PROD deploy
 waits for approval, until that approval is resolved. Only resolution by
 approval was observed: an approval expires after 30 days (`ADR-000`), and
 whether a rejection or the expiry releases the group was not observed.
+
+## Amendment (2026-11-26): the precedent from ADR-001 no longer holds
+
+The Rationale's paragraph "Why this doesn't reopen the 'simpler is one
+secret' argument for the API" rests on `ADR-001` accepting real
+authentication as in scope. `ADR-001` was reversed by its amendment of
+2026-11-11, so that precedent no longer holds. The decision rests on the
+blast-radius argument of the Rationale's first paragraph alone. Its
+reference to `ADR-001` is not part of that argument, which rests on
+findings 1 and 2.
